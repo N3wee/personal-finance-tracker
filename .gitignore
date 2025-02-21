@@ -1,0 +1,32 @@
+# Ignore virtual environment (venv)
+venv/
+*.pyc
+__pycache__/
+
+# Ignore database files
+*.sqlite3
+db.sqlite3
+
+# Ignore environment variables/secrets (if using .env files)
+.env
+*.env
+
+# Ignore VS Code workspace settings
+.vscode/
+.settings/
+
+# Ignore compiled files and cache
+*.log
+*.pot
+*.pyc
+*.pyo
+*.pyd
+*.so
+.DS_Store
+
+# Ignore Django migrations cache
+**/migrations/__pycache__/
+**/migrations/*.pyc
+
+# Ignore node_modules (if you ever use Node.js frontend)
+node_modules/
