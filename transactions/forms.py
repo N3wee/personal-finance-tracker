@@ -6,5 +6,5 @@ class TransactionForm(forms.ModelForm):
         model = Transaction
         fields = ['title', 'amount', 'transaction_type', 'category', 'date', 'notes']
         widgets = {
-            'date': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
+            'date': forms.DateTimeInput(attrs={'type': 'date'}),
         }
