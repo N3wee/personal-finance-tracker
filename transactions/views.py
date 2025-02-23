@@ -2,6 +2,10 @@ from django.shortcuts import render, redirect, get_object_or_404
 from .models import Transaction
 from .forms import TransactionForm
 from django.contrib.auth.decorators import login_required
+import logging
+
+# Configure logging
+logger = logging.getLogger(__name__)
 
 @login_required
 def transaction_list(request):
@@ -10,16 +14,21 @@ def transaction_list(request):
 
 @login_required
 def add_transaction(request):
+    logger.debug("Processing add_transaction request")
     if request.method == "POST":
+        logger.debug("Form submitted with data: %s", request.POST)
         form = TransactionForm(request.POST)
         if form.is_valid():
+            logger.debug("Form is valid")
             transaction = form.save(commit=False)
             transaction.user = request.user
             transaction.save()
             return redirect('transaction_list')
         else:
-            print(form.errors)  # Debug: Print form errors to terminal
+            logger.error("Form errors: %s", form.errors)
+            print(form.errors)  # Debug: Check terminal for errors
     else:
+        logger.debug("Rendering empty form")
         form = TransactionForm()
     return render(request, 'transactions/add_transaction.html', {'form': form})
 
@@ -32,7 +41,7 @@ def edit_transaction(request, transaction_id):
             form.save()
             return redirect('transaction_list')
         else:
-            print(form.errors)  # Debug: Print form errors to terminal
+            print(form.errors)  # Debug: Check terminal for errors
     else:
         form = TransactionForm(instance=transaction)
     return render(request, 'transactions/edit_transaction.html', {'form': form})

@@ -18,6 +18,7 @@ from django.contrib import admin
 from django.urls import path, include
 
 urlpatterns = [
+    path('', include('transactions.urls')),  # Redirect root to transactions
     path('admin/', admin.site.urls),
     path('transactions/', include('transactions.urls')),
 
