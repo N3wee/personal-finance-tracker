@@ -15,6 +15,23 @@
                     <li class="nav-item"><a class="nav-link" href="{% url 'transaction_list' %}">Transactions</a></li>
                     <li class="nav-item"><a class="nav-link" href="{% url 'budget_list' %}">Budgets</a></li>
                 </ul>
+                <ul class="navbar-nav ms-auto">
+                    {% if user.is_authenticated %}
+                    <li class="nav-item">
+                        <span class="nav-link text-white">Logged in as {{ user.username }}</span>
+                    </li>
+                    <li class="nav-item">
+                        <form method="POST" action="{% url 'logout' %}" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="nav-link btn btn-link text-white p-0">Logout</button>
+                        </form>
+                    </li>
+                    {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="{% url 'login' %}">Login</a>
+                    </li>
+                    {% endif %}
+                </ul>
             </div>
         </div>
     </nav>

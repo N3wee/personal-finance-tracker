@@ -122,3 +122,7 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Authentication settings
+LOGIN_REDIRECT_URL = '/budgets/'  # Redirect to budgets page after login
+LOGOUT_REDIRECT_URL = '/accounts/login/'  # Redirect to login page after logout
