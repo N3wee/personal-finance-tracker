@@ -1,5 +1,5 @@
 from django import forms
-from .models import Transaction
+from .models import Transaction, Budget
 
 class TransactionForm(forms.ModelForm):
     class Meta:
@@ -27,3 +27,21 @@ class TransactionForm(forms.ModelForm):
         if not title.strip():
             raise forms.ValidationError("Title cannot be empty.")
         return title
+
+class BudgetForm(forms.ModelForm):
+    class Meta:
+        model = Budget
+        fields = ['category', 'amount', 'start_date', 'end_date', 'notes']
+        widgets = {
+            'category': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g., Food, Rent'}),
+            'amount': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0', 'placeholder': 'Enter budget amount'}),
+            'start_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'end_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Add notes (optional)'}),
+        }
+
+    def clean_amount(self):
+        amount = self.cleaned_data['amount']
+        if amount <= 0:
+            raise forms.ValidationError("Budget amount must be greater than zero.")
+        return amount    

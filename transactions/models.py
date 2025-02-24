@@ -26,3 +26,15 @@ class Transaction(models.Model):
 
     def __str__(self):
         return f"{self.title} - {self.amount} ({self.transaction_type})"
+
+
+class Budget(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)  # Links to user
+    category = models.CharField(max_length=100)  # Budget category (e.g., Food, Rent)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)  # Budgeted amount
+    start_date = models.DateField(default=timezone.now)  # Start of budget period
+    end_date = models.DateField(blank=True, null=True)  # End of budget period (optional)
+    notes = models.TextField(blank=True, null=True)  # Optional description
+
+    def __str__(self):
+        return f"{self.category} - ${self.amount} ({self.user.username})"

@@ -1,12 +1,12 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Transaction
-from .forms import TransactionForm
+from .models import Transaction, Budget
+from .forms import TransactionForm, BudgetForm
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 import datetime
 import logging
 
-# Configure logging (optional, but included for consistency)
+# Configure logging
 logger = logging.getLogger(__name__)
 
 @login_required
@@ -93,3 +93,45 @@ def delete_transaction(request, transaction_id):
         transaction.delete()
         return redirect('transaction_list')
     return render(request, 'transactions/delete_transaction.html', {'transaction': transaction})
+
+@login_required
+def budget_list(request):
+    budgets = Budget.objects.filter(user=request.user)
+    return render(request, 'transactions/budget_list.html', {'budgets': budgets})
+
+@login_required
+def add_budget(request):
+    if request.method == "POST":
+        form = BudgetForm(request.POST)  # We’ll create BudgetForm next
+        if form.is_valid():
+            budget = form.save(commit=False)
+            budget.user = request.user
+            budget.save()
+            return redirect('budget_list')
+        else:
+            print(form.errors)  # Debug: Check terminal for errors
+    else:
+        form = BudgetForm()
+    return render(request, 'transactions/add_budget.html', {'form': form})
+
+@login_required
+def edit_budget(request, budget_id):
+    budget = get_object_or_404(Budget, id=budget_id, user=request.user)
+    if request.method == "POST":
+        form = BudgetForm(request.POST, instance=budget)
+        if form.is_valid():
+            form.save()
+            return redirect('budget_list')
+        else:
+            print(form.errors)  # Debug: Check terminal for errors
+    else:
+        form = BudgetForm(instance=budget)
+    return render(request, 'transactions/edit_budget.html', {'form': form})
+
+@login_required
+def delete_budget(request, budget_id):
+    budget = get_object_or_404(Budget, id=budget_id, user=request.user)
+    if request.method == "POST":
+        budget.delete()
+        return redirect('budget_list')
+    return render(request, 'transactions/delete_budget.html', {'budget': budget})
