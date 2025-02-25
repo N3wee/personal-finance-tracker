@@ -24,6 +24,18 @@ class Transaction(models.Model):
     recurring = models.BooleanField(default=False)  # If transaction repeats
     payment_method = models.CharField(max_length=50, choices=PAYMENT_METHODS, default="cash")  # Payment method
 
+    def clean(self):
+        """Ensure amount is positive"""
+        if self.amount <= 0:
+            raise ValidationError("Amount must be greater than zero.")
+
+
+    def save(self, *args, **kwargs):
+        """Call full validation before saving"""
+        self.clean()
+        super().save(*args, **kwargs)
+
+
     def __str__(self):
         return f"{self.title} - {self.amount} ({self.transaction_type})"
 
@@ -34,7 +46,22 @@ class Budget(models.Model):
     amount = models.DecimalField(max_digits=10, decimal_places=2)  # Budgeted amount
     start_date = models.DateField(default=timezone.now)  # Start of budget period
     end_date = models.DateField(blank=True, null=True)  # End of budget period (optional)
-    notes = models.TextField(blank=True, null=True)  # Optional description
+    notes = models.TextField(blank=True, null=True)  #
+
+    def clean(self):
+        """Ensure amount is positive and end_date is after start_date if provided"""
+        if self.amount <= 0:
+            raise ValidationError("Budget amount must be greater than zero.")
+
+        if self.end_date and self.end_date < self.start_date:
+            raise ValidationError("End date must be after start date.")
+
+
+    def save(self, *args, **kwargs):
+        """Call full validation before saving"""
+        self.clean()
+        super().save(*args, **kwargs)
+            
 
     def __str__(self):
         return f"{self.category} - ${self.amount} ({self.user.username})"
