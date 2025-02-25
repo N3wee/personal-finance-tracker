@@ -11,7 +11,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 def user_owns_object(user, obj):
-    """Check if the user owns the given object (Transaction or Budget) and log for debugging."""
+    """Check if the user owns the object or is a superuser."""
     if obj is None:
         logger.error("Object is None in user_owns_object")
         return False
@@ -19,11 +19,12 @@ def user_owns_object(user, obj):
     if owner is None:
         logger.error(f"No user associated with object: {obj}")
         return False
-    # Log detailed information for debugging
-    logger.debug(f"Checking ownership: User {user.username}, Object user {owner.username if owner else 'None'}, Object type {type(obj).__name__}, Object ID {obj.id if obj.id else 'None'}")
-    result = owner == user
-    logger.debug(f"Ownership check result: {result}")
+    # Allow superusers to bypass ownership check
+    result = user.is_superuser or owner == user
+    logger.debug(f"Checking ownership: User {user.username}, Object user {owner.username if owner else 'None'}, "
+                 f"Object type {type(obj).__name__}, Object ID {obj.id if obj.id else 'None'}, Result {result}")
     return result
+
 
 @login_required
 def transaction_list(request):

@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 from transactions.models import Transaction, Budget
 from transactions.forms import TransactionForm, BudgetForm
 from django.urls import reverse
+from django.core.exceptions import ValidationError  # Import added for clarity
 
 class TransactionModelTest(TestCase):
     def setUp(self):
@@ -24,7 +25,7 @@ class TransactionModelTest(TestCase):
         self.assertTrue(self.transaction.user == self.user)
 
     def test_transaction_validation(self):
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ValidationError):  # Updated to ValidationError
             Transaction.objects.create(
                 user=self.user,
                 title='Invalid Amount',
@@ -52,7 +53,7 @@ class BudgetModelTest(TestCase):
         self.assertTrue(self.budget.user == self.user)
 
     def test_budget_validation(self):
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ValidationError):  # Updated to ValidationError
             Budget.objects.create(
                 user=self.user,
                 category='Invalid Amount',
@@ -172,8 +173,22 @@ class TransactionViewTest(TestCase):
         self.assertEqual(self.transaction.title, 'Updated Income')
 
     def test_edit_transaction_non_owner(self):
+        other_user = User.objects.create_user(username='otheruser', password='testpass123')  # Regular user
+        self.client.login(username='otheruser', password='testpass123')
+        response = self.client.post(reverse('edit_transaction', kwargs={'transaction_id': self.transaction.id}), {
+            'title': 'Unauthorized Edit',
+            'amount': 1500.00,
+            'transaction_type': 'Income',
+            'category': 'Salary',
+            'date': '2025-02-01',
+            'payment_method': 'bank_transfer'
+        })
+        self.assertEqual(response.status_code, 403)  # Expect Permission Denied
+        self.transaction.refresh_from_db()
+        self.assertEqual(self.transaction.title, 'Test Income')  # Unchanged
+
+    def test_edit_transaction_superuser(self):
         self.client.login(username='nay_s', password='adminpass123')
-        # Try to edit testuser's transaction as admin (should succeed due to superuser)
         response = self.client.post(reverse('edit_transaction', kwargs={'transaction_id': self.transaction.id}), {
             'title': 'Admin Edit',
             'amount': 1500.00,
@@ -182,7 +197,7 @@ class TransactionViewTest(TestCase):
             'date': '2025-02-01',
             'payment_method': 'bank_transfer'
         })
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, 302)  # Superuser succeeds
         self.transaction.refresh_from_db()
         self.assertEqual(self.transaction.title, 'Admin Edit')
 
@@ -193,10 +208,16 @@ class TransactionViewTest(TestCase):
         self.assertFalse(Transaction.objects.filter(id=self.transaction.id).exists())
 
     def test_delete_transaction_non_owner(self):
-        self.client.login(username='nay_s', password='adminpass123')
-        # Admin can delete, but log to ensure non-owner restriction works for regular users
+        other_user = User.objects.create_user(username='otheruser', password='testpass123')
+        self.client.login(username='otheruser', password='testpass123')
         response = self.client.post(reverse('delete_transaction', kwargs={'transaction_id': self.transaction.id}))
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, 403)  # Expect Permission Denied
+        self.assertTrue(Transaction.objects.filter(id=self.transaction.id).exists())  # Not deleted
+
+    def test_delete_transaction_superuser(self):
+        self.client.login(username='nay_s', password='adminpass123')
+        response = self.client.post(reverse('delete_transaction', kwargs={'transaction_id': self.transaction.id}))
+        self.assertEqual(response.status_code, 302)  # Superuser succeeds
         self.assertFalse(Transaction.objects.filter(id=self.transaction.id).exists())
 
 class BudgetViewTest(TestCase):
@@ -248,15 +269,27 @@ class BudgetViewTest(TestCase):
         self.assertEqual(self.budget.category, 'Updated Food')
 
     def test_edit_budget_non_owner(self):
+        other_user = User.objects.create_user(username='otheruser', password='testpass123')
+        self.client.login(username='otheruser', password='testpass123')
+        response = self.client.post(reverse('edit_budget', kwargs={'budget_id': self.budget.id}), {
+            'category': 'Unauthorized Food',
+            'amount': 700.00,
+            'start_date': '2025-02-01',
+            'end_date': '2025-02-28'
+        })
+        self.assertEqual(response.status_code, 403)  # Expect Permission Denied
+        self.budget.refresh_from_db()
+        self.assertEqual(self.budget.category, 'Food')  # Unchanged
+
+    def test_edit_budget_superuser(self):
         self.client.login(username='nay_s', password='adminpass123')
-        # Admin can edit, but log to ensure non-owner restriction works for regular users
         response = self.client.post(reverse('edit_budget', kwargs={'budget_id': self.budget.id}), {
             'category': 'Admin Food',
             'amount': 700.00,
             'start_date': '2025-02-01',
             'end_date': '2025-02-28'
         })
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, 302)  # Superuser succeeds
         self.budget.refresh_from_db()
         self.assertEqual(self.budget.category, 'Admin Food')
 
@@ -267,8 +300,14 @@ class BudgetViewTest(TestCase):
         self.assertFalse(Budget.objects.filter(id=self.budget.id).exists())
 
     def test_delete_budget_non_owner(self):
-        self.client.login(username='nay_s', password='adminpass123')
-        # Admin can delete, but log to ensure non-owner restriction works for regular users
+        other_user = User.objects.create_user(username='otheruser', password='testpass123')
+        self.client.login(username='otheruser', password='testpass123')
         response = self.client.post(reverse('delete_budget', kwargs={'budget_id': self.budget.id}))
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, 403)  # Expect Permission Denied
+        self.assertTrue(Budget.objects.filter(id=self.budget.id).exists())  # Not deleted
+
+    def test_delete_budget_superuser(self):
+        self.client.login(username='nay_s', password='adminpass123')
+        response = self.client.post(reverse('delete_budget', kwargs={'budget_id': self.budget.id}))
+        self.assertEqual(response.status_code, 302)  # Superuser succeeds
         self.assertFalse(Budget.objects.filter(id=self.budget.id).exists())
