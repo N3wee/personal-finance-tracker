@@ -2,6 +2,9 @@
 
 {% block content %}
 <h2 class="mb-3">Transactions</h2>
+<div class="alert alert-info mb-3">
+    <p><strong>Motivational Quote:</strong> {{ quote|default:"Loading quote..." }}</p>
+</div>
 <a href="{% url 'add_transaction' %}" class="btn btn-primary mb-3">Add Transaction</a>
 
 <!-- Filtering Form -->
