@@ -6,6 +6,8 @@ from django.core.exceptions import PermissionDenied
 from django.db.models import Q
 import datetime
 import logging
+import requests
+import os
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -24,7 +26,6 @@ def user_owns_object(user, obj):
     logger.debug(f"Checking ownership: User {user.username}, Object user {owner.username if owner else 'None'}, "
                  f"Object type {type(obj).__name__}, Object ID {obj.id if obj.id else 'None'}, Result {result}")
     return result
-
 
 @login_required
 def transaction_list(request):
@@ -60,13 +61,35 @@ def transaction_list(request):
     elif sort_by == 'amount_asc':
         transactions = transactions.order_by('amount')
 
+    # Fetch a motivational quote with fallback, bypassing SSL locally for testing
+    quote = "Failed to load quote. Check your internet connection."
+    try:
+        # Try Quotable API first (motivational) with SSL bypass for local testing
+        response = requests.get('https://api.quotable.io/random?tags=motivational', 
+                             timeout=5, 
+                             verify=False)  # Temporary local bypass
+        logger.debug(f"Quotable API response status: {response.status_code}, JSON: {response.json()}")
+        if response.status_code == 200:
+            quote_data = response.json()
+            quote = f'"{quote_data["content"]}" — {quote_data["author"]}'
+        else:
+            # Fallback to Kanye API if Quotable fails
+            response = requests.get('https://api.kanye.rest/', timeout=5)
+            logger.debug(f"Kanye API response status: {response.status_code}, JSON: {response.json()}")
+            if response.status_code == 200:
+                quote_data = response.json()
+                quote = f'"{quote_data["quote"]}" — Kanye West'
+    except requests.RequestException as e:
+        logger.error(f"Failed to fetch quote: {e}")
+
     return render(request, 'transactions/transaction_list.html', {
         'transactions': transactions,
         'transaction_type': transaction_type,
         'category': category,
         'start_date': start_date,
         'end_date': end_date,
-        'sort_by': sort_by
+        'sort_by': sort_by,
+        'quote': quote
     })
 
 @login_required
@@ -174,7 +197,7 @@ def delete_budget(request, budget_id):
     budget = get_object_or_404(Budget, id=budget_id)
     logger.debug(f"Attempting to delete budget {budget_id} by user {request.user.username}")
     if not user_owns_object(request.user, budget):
-        logger.error("Permission denied: User %s tried to delete budget %s owned by %s", request.user.username, budget_id, budget.user.username if budget.user else "None")
+        logger.error("Permission denied: User %s tried to delete budget {budget_id} owned by %s", request.user.username, budget_id, budget.user.username if budget.user else "None")
         raise PermissionDenied("You do not have permission to delete this budget.")
     if request.method == "POST":
         budget.delete()
