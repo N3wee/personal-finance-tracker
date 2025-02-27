@@ -80,15 +80,24 @@ WSGI_APPLICATION = 'finance_tracker.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.getenv('DATABASE_NAME', 'personal_finance_tracker'),
+        'USER': os.getenv('DATABASE_USER', 'postgres'),
+        'PASSWORD': os.getenv('DATABASE_PASSWORD', '626918'),
+        'HOST': os.getenv('DATABASE_HOST', 'localhost'),
+        'PORT': os.getenv('DATABASE_PORT', '5432'),
     }
 }
 
-# Heroku DATABASE_URL override (required for Heroku, fallback for local)
+# Heroku DATABASE_URL override (required for Heroku, optional for local)
 import dj_database_url
-DATABASES['default'] = dj_database_url.config(
-    conn_max_age=600,  # Persistent connections for Heroku
-    default='postgres://postgres:626918@localhost:5432/personal_finance_tracker'
-)
+if os.getenv('HEROKU', None):  # Check if running on Heroku
+    DATABASES['default'] = dj_database_url.config(
+        conn_max_age=600,  # Persistent connections for Heroku
+        default='postgres://postgres:626918@localhost:5432/personal_finance_tracker'
+    )
+else:
+    # Local development fallback (ensure PostgreSQL is running locally)
+    DATABASES['default']['HOST'] = 'localhost'  # Explicitly set for local testing
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
