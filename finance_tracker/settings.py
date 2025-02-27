@@ -26,7 +26,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-7hgjjg-=i!&j75l8v^f-rpr$bs6(z2r-_ozv1&3ldf)anp^@^^')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False  # Set to False for Heroku production
+DEBUG = True  # Set to True for local development, False for Heroku
 
 ALLOWED_HOSTS = ['.herokuapp.com', '127.0.0.1', 'localhost']  # Add Heroku hostname
 
@@ -86,9 +86,10 @@ DATABASES = {
     }
 }
 
-# Heroku DATABASE_URL override
+# Heroku DATABASE_URL override (optional for local, required for Heroku)
 import dj_database_url
-DATABASES['default'] = dj_database_url.config(default=os.getenv('DATABASE_URL'))
+DATABASES['default'] = dj_database_url.config(default=os.getenv('DATABASE_URL', 
+    'postgres://postgres:626918@localhost:5432/personal_finance_tracker'))
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
@@ -134,5 +135,5 @@ STATICFILES_DIRS = [
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Authentication settings
-LOGIN_REDIRECT_URL = '/transactions/'  # Redirect to transactions page after login (updated from budgets/)
+LOGIN_REDIRECT_URL = '/transactions/'  # Redirect to transactions page after login
 LOGOUT_REDIRECT_URL = '/accounts/login/'  # Redirect to login page after logout
