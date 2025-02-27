@@ -11,6 +11,10 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
+import os
+from dotenv import load_dotenv
+
+load_dotenv()  # Load .env file for environment variables
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -19,12 +23,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-7hgjjg-=i!&j75l8v^f-rpr$bs6(z2r-_ozv1&3ldf)anp^@^^'
+SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-7hgjjg-=i!&j75l8v^f-rpr$bs6(z2r-_ozv1&3ldf)anp^@^^')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False  # Set to False for Heroku production
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['.herokuapp.com', '127.0.0.1', 'localhost']  # Add Heroku hostname
 
 # Application definition
 
@@ -74,13 +78,17 @@ WSGI_APPLICATION = 'finance_tracker.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'personal_finance_tracker',
-        'USER': 'postgres',
-        'PASSWORD': '626918',
-        'HOST': 'localhost',
-        'PORT': '5432',
+        'NAME': os.getenv('DATABASE_NAME', 'personal_finance_tracker'),
+        'USER': os.getenv('DATABASE_USER', 'postgres'),
+        'PASSWORD': os.getenv('DATABASE_PASSWORD', '626918'),
+        'HOST': os.getenv('DATABASE_HOST', 'localhost'),
+        'PORT': os.getenv('DATABASE_PORT', '5432'),
     }
 }
+
+# Heroku DATABASE_URL override
+import dj_database_url
+DATABASES['default'] = dj_database_url.config(default=os.getenv('DATABASE_URL'))
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
@@ -114,7 +122,11 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')  # For Heroku collectstatic
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static'),  # If you have a static folder
+]
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
@@ -122,5 +134,5 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Authentication settings
-LOGIN_REDIRECT_URL = '/budgets/'  # Redirect to budgets page after login
+LOGIN_REDIRECT_URL = '/transactions/'  # Redirect to transactions page after login (updated from budgets/)
 LOGOUT_REDIRECT_URL = '/accounts/login/'  # Redirect to login page after logout
