@@ -38,14 +38,14 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-    'whitenoise.runserver_nostatic',  # for development
+    'whitenoise.runserver_nostatic',  # For development
     'django.contrib.staticfiles',
     'transactions',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',  # Add whitenoise middleware
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # Must be before security middleware
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -80,18 +80,14 @@ WSGI_APPLICATION = 'finance_tracker.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('DATABASE_NAME', 'personal_finance_tracker'),
-        'USER': os.getenv('DATABASE_USER', 'postgres'),
-        'PASSWORD': os.getenv('DATABASE_PASSWORD', '626918'),
-        'HOST': os.getenv('DATABASE_HOST', 'localhost'),
-        'PORT': os.getenv('DATABASE_PORT', '5432'),
     }
 }
 
-# Heroku DATABASE_URL override
+# Heroku DATABASE_URL override (required for Heroku, fallback for local)
 import dj_database_url
-DATABASES['default'] = dj_database_url.config(default=os.getenv('DATABASE_URL', 
-    'postgres://postgres:626918@localhost:5432/personal_finance_tracker'))
+DATABASES['default'] = dj_database_url.config(
+    default='postgres://postgres:626918@localhost:5432/personal_finance_tracker'
+)
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
