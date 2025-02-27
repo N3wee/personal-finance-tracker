@@ -85,7 +85,7 @@ DATABASES = {
 
 # Heroku DATABASE_URL override (required for Heroku, fallback for local)
 import dj_database_url
-if 'DATABASE_URL' in os.environ:  # Check if DATABASE_URL is set (Heroku)
+if 'DYNO' in os.environ:  # Check if running on Heroku
     DATABASES['default'] = dj_database_url.config(
         conn_max_age=600,  # Persistent connections for Heroku
         ssl_require=True,  # Ensure SSL for Heroku Postgres
