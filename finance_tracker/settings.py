@@ -38,12 +38,14 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
+    'whitenoise.runserver_nostatic',  # for development
     'django.contrib.staticfiles',
     'transactions',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # Add whitenoise middleware
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -86,7 +88,7 @@ DATABASES = {
     }
 }
 
-# Heroku DATABASE_URL override (optional for local, required for Heroku)
+# Heroku DATABASE_URL override
 import dj_database_url
 DATABASES['default'] = dj_database_url.config(default=os.getenv('DATABASE_URL', 
     'postgres://postgres:626918@localhost:5432/personal_finance_tracker'))
@@ -126,8 +128,9 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')  # For Heroku collectstatic
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static'),  # If you have a static folder
+    os.path.join(BASE_DIR, 'static'),  # For local static files
 ]
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'  # For Heroku
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
