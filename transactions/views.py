@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from .models import Transaction, Budget
 from .forms import TransactionForm, BudgetForm
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.forms import UserCreationForm
 from django.urls import reverse_lazy
@@ -9,6 +9,7 @@ from django.contrib.auth.models import User
 from django.views.generic.edit import CreateView, UpdateView
 from django.core.exceptions import PermissionDenied
 from django.db.models import Q
+from django.contrib import messages
 import datetime
 import logging
 import requests
@@ -218,6 +219,10 @@ class RegisterView(CreateView):
     template_name = 'registration/register.html'
     success_url = reverse_lazy('login')
 
+    def form_valid(self, form):
+        messages.success(self.request, 'Registration successful! Please log in.')
+        return super().form_valid(form)
+
 class EditProfileView(LoginRequiredMixin, UpdateView):
     model = User
     fields = ['username', 'email']
@@ -226,3 +231,10 @@ class EditProfileView(LoginRequiredMixin, UpdateView):
 
     def get_object(self):
         return self.request.user
+    
+def login_redirect_if_authenticated(view_func):
+    def wrapper(request, *args, **kwargs):
+        if request.user.is_authenticated:
+            return redirect('landing_page')  # Redirect to landing page if logged in
+        return view_func(request, *args, **kwargs)
+    return wrapper    

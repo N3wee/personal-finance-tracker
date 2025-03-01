@@ -16,12 +16,13 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from transactions.views import RegisterView
+from transactions.views import RegisterView, login_redirect_if_authenticated
+from django.contrib.auth.views import LoginView
 
 urlpatterns = [
     path('', include('transactions.urls')),  # Redirect root to transactions
     path('accounts/', include('django.contrib.auth.urls')),  # Authentication URLs
     path('register/', RegisterView.as_view(), name='register'),  # Registration route
-    path('transactions/', include('transactions.urls')),  # Ensure transactions URLs are included
+    path('transactions/', include('transactions.urls')),  
     path('admin/', admin.site.urls),
 ]
