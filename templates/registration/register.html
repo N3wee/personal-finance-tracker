@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load widget_tweaks %}
+{% load widget_tweaks %}  
 {% block content %}
 <div class="container mt-5">
     <div class="row justify-content-center">
@@ -18,7 +18,7 @@
                 Please correct the errors below.
             </div>
             {% endif %}
-            <form method="post" class="card p-4 shadow">
+            <form method="post" class="card p-4 shadow" novalidate>  <!-- Add novalidate to disable HTML5 validation -->
                 {% csrf_token %}
                 <div class="row g-3">
                     <div class="col-12">
