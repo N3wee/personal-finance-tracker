@@ -16,6 +16,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from transactions.views import RegisterView
 
 urlpatterns = [
     path('accounts/', include('django.contrib.auth.urls')),  # Add this line for authentication URLs
