@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 text-center">
+            <h1 class="display-4 fw-bold text-primary">Personal Finance Tracker</h1>
+            <p class="lead text-muted">Take control of your finances with our secure and easy-to-use app. Track your income, expenses, and budgets to achieve your financial goals.</p>
+            {% if not user.is_authenticated %}
+            <div class="mt-4">
+                <a href="{% url 'login' %}" class="btn btn-primary btn-lg me-2">Login</a>
+                <a href="{% url 'register' %}" class="btn btn-outline-primary btn-lg">Register</a>
+            </div>
+            <p class="mt-3 text-muted">Already have an account? <a href="{% url 'login' %}" class="text-primary">Sign in here</a>.</p>
+            {% else %}
+            <div class="mt-4">
+                <a href="{% url 'transaction_list' %}" class="btn btn-primary btn-lg">Go to Transactions</a>
+            </div>
+            <p class="mt-3 text-muted">Welcome back, {{ user.username }}! Manage your finances now.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

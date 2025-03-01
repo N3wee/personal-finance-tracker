@@ -2,9 +2,11 @@ from django.shortcuts import render, redirect, get_object_or_404
 from .models import Transaction, Budget
 from .forms import TransactionForm, BudgetForm
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.forms import UserCreationForm
 from django.urls import reverse_lazy
-from django.views.generic.edit import CreateView
+from django.contrib.auth.models import User
+from django.views.generic.edit import CreateView, UpdateView
 from django.core.exceptions import PermissionDenied
 from django.db.models import Q
 import datetime
@@ -29,6 +31,9 @@ def user_owns_object(user, obj):
     logger.debug(f"Checking ownership: User {user.username}, Object user {owner.username if owner else 'None'}, "
                  f"Object type {type(obj).__name__}, Object ID {obj.id if obj.id else 'None'}, Result {result}")
     return result
+
+def landing_page(request):
+    return render(request, 'transactions/landing.html')
 
 @login_required
 def transaction_list(request):
@@ -212,3 +217,12 @@ class RegisterView(CreateView):
     form_class = UserCreationForm
     template_name = 'registration/register.html'
     success_url = reverse_lazy('login')
+
+class EditProfileView(LoginRequiredMixin, UpdateView):
+    model = User
+    fields = ['username', 'email']
+    template_name = 'registration/edit_profile.html'
+    success_url = reverse_lazy('transaction_list')
+
+    def get_object(self):
+        return self.request.user

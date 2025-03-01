@@ -22,5 +22,6 @@ urlpatterns = [
     path('', include('transactions.urls')),  # Redirect root to transactions
     path('accounts/', include('django.contrib.auth.urls')),  # Authentication URLs
     path('register/', RegisterView.as_view(), name='register'),  # Registration route
+    path('transactions/', include('transactions.urls')),  # Ensure transactions URLs are included
     path('admin/', admin.site.urls),
 ]

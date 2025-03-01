@@ -145,5 +145,5 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage' 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Authentication settings
-LOGIN_REDIRECT_URL = '/transactions/'  # Redirect to transactions page after login
+LOGIN_REDIRECT_URL = '/'  # Redirect to landing page instead of /transactions/
 LOGOUT_REDIRECT_URL = '/accounts/login/'  # Redirect to login page after logout
