@@ -2,6 +2,7 @@ from django.urls import path
 from .views import transaction_list, add_transaction, edit_transaction, delete_transaction, budget_list, add_budget, edit_budget, delete_budget
 
 urlpatterns = [
+    path('', views.landing_page, name='landing_page'),
     path('', transaction_list, name="transaction_list"),  # Default view for /transactions/
     path('add/', add_transaction, name="add_transaction"),
     path('<int:transaction_id>/edit/', edit_transaction, name="edit_transaction"),
