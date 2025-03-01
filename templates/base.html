@@ -22,15 +22,15 @@
                 <ul class="navbar-nav ms-auto">
                     {% if user.is_authenticated %}
                     <li class="nav-item">
-                        <span class="nav-link text-white">Logged in as {{ user.username }}</span>
+                        <span class="nav-link text-white align-middle d-flex align-items-center">Logged in as {{ user.username }}</span>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link text-white" href="{% url 'edit_profile' %}">Edit Profile</a> <!-- Add this if edit_profile is implemented -->
+                        <a class="nav-link text-white align-middle d-flex align-items-center" href="{% url 'edit_profile' %}">Edit Profile</a>
                     </li>
                     <li class="nav-item">
                         <form method="POST" action="{% url 'logout' %}" class="d-inline">
                             {% csrf_token %}
-                            <button type="submit" class="nav-link btn btn-link text-white p-0">Logout</button>
+                            <button type="submit" class="nav-link btn btn-link text-white p-0 d-flex align-items-center" style="height: 100%;">Logout</button>
                         </form>
                     </li>
                     {% else %}
