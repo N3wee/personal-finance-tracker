@@ -46,7 +46,7 @@
         <!-- Sorting -->
         <div class="col-md-3">
             <label for="sort_by" class="form-label">Sort By:</label>
-            <select name="sort_by" id="sort_by" class="form-control">
+            <select name="sort_by" id="sort_by" class="form-control" onchange="this.form.submit()">
                 <option value="">Default</option>
                 <option value="date_desc" {% if sort_by == "date_desc" %}selected{% endif %}>Date (Newest First)</option>
                 <option value="date_asc" {% if sort_by == "date_asc" %}selected{% endif %}>Date (Oldest First)</option>
