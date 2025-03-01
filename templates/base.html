@@ -6,6 +6,23 @@
     <title>Personal Finance Tracker</title>
     {% load static %}
     <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet">
+    <style>
+        /* Inline CSS for quick navbar polish (can move to custom.css later if needed) */
+        .navbar {
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+        }
+        .navbar-brand, .nav-link {
+            font-weight: 500; /* Slightly bolder text */
+            transition: color 0.3s ease; /* Smooth hover effect */
+        }
+        .navbar-brand:hover, .nav-link:hover {
+            color: #e0e0e0; /* Lighter gray on hover for contrast */
+        }
+        .navbar-dark .navbar-nav .nav-link.active {
+            color: #ffffff; /* Ensure active links stand out */
+            font-weight: 600;
+        }
+    </style>
 </head>
 <body>
     <nav class="navbar navbar-expand-md navbar-dark bg-dark">
