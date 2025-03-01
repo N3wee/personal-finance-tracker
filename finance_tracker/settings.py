@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'whitenoise.runserver_nostatic',  # For development
     'django.contrib.staticfiles',
     'transactions',
+    'widget_tweaks',
 ]
 
 MIDDLEWARE = [
