@@ -17,6 +17,7 @@ import datetime
 import logging
 import requests
 import os
+from django.conf import settings  # Import settings to access TEMPLATES
 
 from .models import Transaction, Budget
 from .forms import TransactionForm, BudgetForm, CustomUserEditForm  # Import the new form
@@ -46,7 +47,7 @@ def landing_page(request):
         return redirect('login')
     
     # Debug: Log the template being used
-    logger.debug(f"Rendering landing.html from: {TEMPLATES[0]['DIRS']} and APP_DIRS: {TEMPLATES[0]['APP_DIRS']}")
+    logger.debug(f"Rendering landing.html from: {settings.TEMPLATES[0]['DIRS']} and APP_DIRS: {settings.TEMPLATES[0]['APP_DIRS']}")
 
     # Calculate financial summary for the authenticated user
     try:
