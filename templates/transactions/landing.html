@@ -42,36 +42,55 @@
 
             <!-- Charts Section -->
             <div class="mt-5">
-                <h3 class="mb-3">Financial Trends (Last 6 Months)</h3>
-                <canvas id="monthlyChart" class="w-100"></canvas>
+                <h3 class="mb-3">Financial Visualizations</h3>
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <h4>Income by Category</h4>
+                        <canvas id="incomePieChart" class="w-100"></canvas>
+                    </div>
+                    <div class="col-md-6">
+                        <h4>Expenses by Category</h4>
+                        <canvas id="expensesPieChart" class="w-100"></canvas>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <h4>Monthly Income and Expenses (Last 6 Months)</h4>
+                    <canvas id="monthlyChart" class="w-100"></canvas>
+                </div>
             </div>
 
             <!-- Reports Section -->
             <div class="mt-5">
                 <h3 class="mb-3">Recent Activity</h3>
-                <div class="card p-3 shadow">
-                    <h5>Recent Transactions</h5>
-                    <ul class="list-group list-group-flush">
-                        {% for transaction in transactions|slice:":5" %}
-                        <li class="list-group-item">
-                            {{ transaction.title }} - ${{ transaction.amount }} ({{ transaction.transaction_type }}, {{ transaction.date }})
-                        </li>
-                        {% empty %}
-                        <li class="list-group-item text-muted">No recent transactions.</li>
-                        {% endfor %}
-                    </ul>
-                </div>
-                <div class="card p-3 shadow mt-3">
-                    <h5>Active Budgets</h5>
-                    <ul class="list-group list-group-flush">
-                        {% for budget in budgets|slice:":5" %}
-                        <li class="list-group-item">
-                            {{ budget.category }} - ${{ budget.amount }} ({{ budget.start_date }} - {{ budget.end_date|default:"Ongoing" }})
-                        </li>
-                        {% empty %}
-                        <li class="list-group-item text-muted">No active budgets.</li>
-                        {% endfor %}
-                    </ul>
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <div class="card p-3 shadow">
+                            <h5>Recent Transactions</h5>
+                            <ul class="list-group list-group-flush">
+                                {% for transaction in recent_transactions %}
+                                <li class="list-group-item">
+                                    {{ transaction.title }} - ${{ transaction.amount }} ({{ transaction.transaction_type }}, {{ transaction.date }})
+                                </li>
+                                {% empty %}
+                                <li class="list-group-item text-muted">No recent transactions.</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card p-3 shadow">
+                            <h5>Active Budgets</h5>
+                            <ul class="list-group list-group-flush">
+                                {% for budget in recent_budgets %}
+                                <li class="list-group-item">
+                                    {{ budget.category }} - ${{ budget.amount }} ({{ budget.start_date }} - {{ budget.end_date|default:"Ongoing" }})
+                                </li>
+                                {% empty %}
+                                <li class="list-group-item text-muted">No active budgets.</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -93,19 +112,19 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const ctx = document.getElementById('monthlyChart').getContext('2d');
+            // Monthly Income and Expenses Bar Chart
+            const ctxMonthly = document.getElementById('monthlyChart').getContext('2d');
             const monthlyIncome = {{ monthly_income|safe }};
             const monthlyExpenses = {{ monthly_expenses|safe }};
 
-            // Prepare labels and data for the chart
-            const labels = monthlyIncome.map(item => new Date(0, item.date__month - 1).toLocaleString('default', { month: 'long' }));
+            const monthlyLabels = monthlyIncome.map(item => new Date(0, item.date__month - 1).toLocaleString('default', { month: 'long' }));
             const incomeData = monthlyIncome.map(item => item.total || 0);
             const expensesData = monthlyExpenses.map(item => item.total || 0);
 
-            new Chart(ctx, {
+            new Chart(ctxMonthly, {
                 type: 'bar',
                 data: {
-                    labels: labels,
+                    labels: monthlyLabels,
                     datasets: [{
                         label: 'Income',
                         data: incomeData,
@@ -143,6 +162,68 @@
                         title: {
                             display: true,
                             text: 'Monthly Income and Expenses'
+                        }
+                    }
+                }
+            });
+
+            // Income by Category Pie Chart
+            const ctxIncomePie = document.getElementById('incomePieChart').getContext('2d');
+            const incomeCategories = {{ income_by_category|safe }};
+            const incomeLabels = incomeCategories.map(item => item.category);
+            const incomeData = incomeCategories.map(item => item.total || 0);
+
+            new Chart(ctxIncomePie, {
+                type: 'pie',
+                data: {
+                    labels: incomeLabels,
+                    datasets: [{
+                        data: incomeData,
+                        backgroundColor: [
+                            'rgba(75, 192, 192, 0.5)',
+                            'rgba(54, 162, 235, 0.5)',
+                            'rgba(255, 206, 86, 0.5)',
+                            'rgba(255, 159, 64, 0.5)',
+                            'rgba(153, 102, 255, 0.5)'
+                        ]
+                    }]
+                },
+                options: {
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Income by Category'
+                        }
+                    }
+                }
+            });
+
+            // Expenses by Category Pie Chart
+            const ctxExpensesPie = document.getElementById('expensesPieChart').getContext('2d');
+            const expensesCategories = {{ expenses_by_category|safe }};
+            const expensesLabels = expensesCategories.map(item => item.category);
+            const expensesData = expensesCategories.map(item => item.total || 0);
+
+            new Chart(ctxExpensesPie, {
+                type: 'pie',
+                data: {
+                    labels: expensesLabels,
+                    datasets: [{
+                        data: expensesData,
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.5)',
+                            'rgba(54, 162, 235, 0.5)',
+                            'rgba(255, 206, 86, 0.5)',
+                            'rgba(75, 192, 192, 0.5)',
+                            'rgba(153, 102, 255, 0.5)'
+                        ]
+                    }]
+                },
+                options: {
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Expenses by Category'
                         }
                     }
                 }
