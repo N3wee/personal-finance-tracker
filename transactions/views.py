@@ -39,12 +39,11 @@ def user_owns_object(user, obj):
                  f"Object type {type(obj).__name__}, Object ID {obj.id if obj.id else 'None'}, Result {result}")
     return result
 
-@login_required(login_url='login')  # Explicitly specify login URL for clarity
+@login_required(login_url='login')
 def landing_page(request):
-    # Ensure user is authenticated (should be handled by @login_required, but handle gracefully)
+    # Ensure user is authenticated
     if not request.user.is_authenticated:
-        logger.warning("Unauthenticated user attempted to access landing_page, redirecting to login")
-        return redirect('login')  # Redirect to login if unauthenticated
+        return redirect('login')
 
     # Calculate financial summary for the authenticated user
     try:
@@ -66,7 +65,7 @@ def landing_page(request):
 
         # Calculate income/expense by category (for pie charts)
         income_by_category = transactions.filter(transaction_type='Income').values('category').annotate(total=Sum('amount')).order_by('-total')
-        expenses_by_category = transactions.filter(transaction_type='Expense').values('category').annotate(total=Sum('amount')).order_by('-top')
+        expenses_by_category = transactions.filter(transaction_type='Expense').values('category').annotate(total=Sum('amount')).order_by('-total')  # Fixed typo from '-top' to '-total'
 
         # Get recent transactions and budgets (last 5)
         recent_transactions = transactions.order_by('-date')[:5]
@@ -79,11 +78,16 @@ def landing_page(request):
             'total_budgets': total_budgets,
             'monthly_income': monthly_income,
             'monthly_expenses': monthly_expenses,
+            'income_by_category': income_by_category,
+            'expenses_by_category': expenses_by_category,
+            'recent_transactions': recent_transactions,
+            'recent_budgets': recent_budgets,
         })
     except Exception as e:
-        # Log the error for debugging (especially on Heroku)
+        import logging
+        logger = logging.getLogger(__name__)
         logger.error(f"Error in landing_page: {str(e)}")
-        return redirect('login')  # Fallback redirect if something goes wrong
+        return redirect('login')
 
 @login_required
 def transaction_list(request):
