@@ -64,6 +64,14 @@ def landing_page(request):
             transaction_type='Expense', date__gte=six_months_ago
         ).values('date__month').annotate(total=Sum('amount')).order_by('date__month')
 
+        # Calculate income/expense by category (for pie charts)
+        income_by_category = transactions.filter(transaction_type='Income').values('category').annotate(total=Sum('amount')).order_by('-total')
+        expenses_by_category = transactions.filter(transaction_type='Expense').values('category').annotate(total=Sum('amount')).order_by('-top')
+
+        # Get recent transactions and budgets (last 5)
+        recent_transactions = transactions.order_by('-date')[:5]
+        recent_budgets = Budget.objects.filter(user=request.user).order_by('-start_date')[:5]
+
         return render(request, 'transactions/landing.html', {
             'total_income': total_income,
             'total_expenses': total_expenses,
