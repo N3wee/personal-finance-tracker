@@ -176,3 +176,4 @@ LOGGING = {
         },
     },
 }
+# Trigger Heroku rebuild for landing page updates (March 3, 2025)
