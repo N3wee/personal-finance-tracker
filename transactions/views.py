@@ -44,6 +44,9 @@ def landing_page(request):
     # Ensure user is authenticated
     if not request.user.is_authenticated:
         return redirect('login')
+    
+    # Debug: Log the template being used
+    logger.debug(f"Rendering landing.html from: {TEMPLATES[0]['DIRS']} and APP_DIRS: {TEMPLATES[0]['APP_DIRS']}")
 
     # Calculate financial summary for the authenticated user
     try:
@@ -84,8 +87,6 @@ def landing_page(request):
             'recent_budgets': recent_budgets,
         })
     except Exception as e:
-        import logging
-        logger = logging.getLogger(__name__)
         logger.error(f"Error in landing_page: {str(e)}")
         return redirect('login')
 
