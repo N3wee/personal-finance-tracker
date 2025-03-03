@@ -12,4 +12,5 @@ urlpatterns = [
     path('budgets/<int:budget_id>/edit/', views.edit_budget, name='edit_budget'),  # Edit budget at /budgets/<id>/edit/
     path('budgets/<int:budget_id>/delete/', views.delete_budget, name='delete_budget'),  # Delete budget at /budgets/<id>/delete/
     path('edit_profile/', views.EditProfileView.as_view(), name='edit_profile'),  # Add edit_profile route
+    path('download_report/', views.download_report, name='download_report'),
 ]

@@ -2,22 +2,151 @@
 {% block content %}
 <div class="container mt-5">
     <div class="row justify-content-center">
-        <div class="col-md-8 text-center">
-            <h1 class="display-4 fw-bold text-primary">Personal Finance Tracker</h1>
-            <p class="lead text-muted">Take control of your finances with our secure and easy-to-use app. Track your income, expenses, and budgets to achieve your financial goals.</p>
-            {% if not user.is_authenticated %}
-            <div class="mt-4">
-                <a href="{% url 'login' %}" class="btn btn-primary btn-lg me-2">Login</a>
-                <a href="{% url 'register' %}" class="btn btn-outline-primary btn-lg">Register</a>
+        <div class="col-md-10">
+            <h1 class="display-4 fw-bold text-primary mb-4">Personal Finance Dashboard</h1>
+            {% if total_income or total_expenses or total_budgets %}
+            <div class="row g-4">
+                <div class="col-md-3">
+                    <div class="card h-100 shadow">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Total Income</h5>
+                            <p class="card-text display-6">${{ total_income|floatformat:2 }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card h-100 shadow">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Total Expenses</h5>
+                            <p class="card-text display-6">${{ total_expenses|floatformat:2 }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card h-100 shadow">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Net Balance</h5>
+                            <p class="card-text display-6">${{ net_balance|floatformat:2 }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card h-100 shadow">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Total Budgets</h5>
+                            <p class="card-text display-6">${{ total_budgets|floatformat:2 }}</p>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <p class="mt-3 text-muted">Already have an account? <a href="{% url 'login' %}" class="text-primary">Sign in here</a>.</p>
+
+            <!-- Charts Section -->
+            <div class="mt-5">
+                <h3 class="mb-3">Financial Trends (Last 6 Months)</h3>
+                <canvas id="monthlyChart" class="w-100"></canvas>
+            </div>
+
+            <!-- Reports Section -->
+            <div class="mt-5">
+                <h3 class="mb-3">Recent Activity</h3>
+                <div class="card p-3 shadow">
+                    <h5>Recent Transactions</h5>
+                    <ul class="list-group list-group-flush">
+                        {% for transaction in transactions|slice:":5" %}
+                        <li class="list-group-item">
+                            {{ transaction.title }} - ${{ transaction.amount }} ({{ transaction.transaction_type }}, {{ transaction.date }})
+                        </li>
+                        {% empty %}
+                        <li class="list-group-item text-muted">No recent transactions.</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <div class="card p-3 shadow mt-3">
+                    <h5>Active Budgets</h5>
+                    <ul class="list-group list-group-flush">
+                        {% for budget in budgets|slice:":5" %}
+                        <li class="list-group-item">
+                            {{ budget.category }} - ${{ budget.amount }} ({{ budget.start_date }} - {{ budget.end_date|default:"Ongoing" }})
+                        </li>
+                        {% empty %}
+                        <li class="list-group-item text-muted">No active budgets.</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+
+            <div class="mt-4">
+                <a href="{% url 'transaction_list' %}" class="btn btn-primary btn-lg">View Transactions</a>
+                <a href="{% url 'budget_list' %}" class="btn btn-outline-primary btn-lg ms-2">View Budgets</a>
+                <a href="{% url 'download_report' %}" class="btn btn-success btn-lg ms-2">Download Report</a>
+            </div>
             {% else %}
+            <p class="text-muted">No financial data available. Start by adding transactions and budgets!</p>
             <div class="mt-4">
-                <a href="{% url 'transaction_list' %}" class="btn btn-primary btn-lg">Go to Transactions</a>
+                <a href="{% url 'transaction_list' %}" class="btn btn-primary btn-lg">Add Transactions</a>
             </div>
-            <p class="mt-3 text-muted">Welcome back, {{ user.username }}! Manage your finances now.</p>
             {% endif %}
         </div>
     </div>
-</div>
+
+    <!-- Chart.js Script -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const ctx = document.getElementById('monthlyChart').getContext('2d');
+            const monthlyIncome = {{ monthly_income|safe }};
+            const monthlyExpenses = {{ monthly_expenses|safe }};
+
+            // Prepare labels and data for the chart
+            const labels = monthlyIncome.map(item => new Date(0, item.date__month - 1).toLocaleString('default', { month: 'long' }));
+            const incomeData = monthlyIncome.map(item => item.total || 0);
+            const expensesData = monthlyExpenses.map(item => item.total || 0);
+
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Income',
+                        data: incomeData,
+                        backgroundColor: 'rgba(75, 192, 192, 0.5)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1
+                    }, {
+                        label: 'Expenses',
+                        data: expensesData,
+                        backgroundColor: 'rgba(255, 99, 132, 0.5)',
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Amount ($)'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Month'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top'
+                        },
+                        title: {
+                            display: true,
+                            text: 'Monthly Income and Expenses'
+                        }
+                    }
+                }
+            });
+        });
+    </script>
 {% endblock %}

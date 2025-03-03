@@ -1,12 +1,12 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
 from django.core.exceptions import PermissionDenied
 from django.urls import reverse_lazy
 from django.views.generic.edit import CreateView, UpdateView
-from django.db.models import Sum, Q
+from django.db.models import Sum
 from django.contrib import messages
 from django.http import HttpResponse
 from reportlab.lib import colors
@@ -19,8 +19,7 @@ import requests
 import os
 
 from .models import Transaction, Budget
-from .forms import TransactionForm, BudgetForm
-
+from .forms import TransactionForm, BudgetForm, CustomUserEditForm  # Import the new form
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -40,35 +39,43 @@ def user_owns_object(user, obj):
                  f"Object type {type(obj).__name__}, Object ID {obj.id if obj.id else 'None'}, Result {result}")
     return result
 
+@login_required(login_url='login')  # Explicitly specify login URL for clarity
 def landing_page(request):
-    # Check if user is authenticated 
+    # Ensure user is authenticated (should be handled by @login_required, but handle gracefully)
     if not request.user.is_authenticated:
-        return redirect('login')  # Redirect to login if somehow unauthenticated (shouldn't happen with @login_required)
-    # Calculate financial summary for the user
-    transactions = Transaction.objects.filter(user=request.user)
-    total_income = transactions.filter(transaction_type='Income').aggregate(Sum('amount'))['amount__sum'] or 0
-    total_expenses = transactions.filter(transaction_type='Expense').aggregate(Sum('amount'))['amount__sum'] or 0
-    net_balance = total_income - total_expenses
-    total_budgets = Budget.objects.filter(user=request.user).aggregate(Sum('amount'))['amount__sum'] or 0
+        logger.warning("Unauthenticated user attempted to access landing_page, redirecting to login")
+        return redirect('login')  # Redirect to login if unauthenticated
 
-    # Calculate monthly trends (last 6 months)
-    today = datetime.date.today()
-    six_months_ago = today - datetime.timedelta(days=180)
-    monthly_income = transactions.filter(
-        transaction_type='Income', date__gte=six_months_ago
-    ).values('date__month').annotate(total=Sum('amount')).order_by('date__month')
-    monthly_expenses = transactions.filter(
-        transaction_type='Expense', date__gte=six_months_ago
-    ).values('date__month').annotate(total=Sum('amount')).order_by('date__month')
+    # Calculate financial summary for the authenticated user
+    try:
+        transactions = Transaction.objects.filter(user=request.user)
+        total_income = transactions.filter(transaction_type='Income').aggregate(Sum('amount'))['amount__sum'] or 0
+        total_expenses = transactions.filter(transaction_type='Expense').aggregate(Sum('amount'))['amount__sum'] or 0
+        net_balance = total_income - total_expenses
+        total_budgets = Budget.objects.filter(user=request.user).aggregate(Sum('amount'))['amount__sum'] or 0
 
-    return render(request, 'transactions/landing.html', {
-        'total_income': total_income,
-        'total_expenses': total_expenses,
-        'net_balance': net_balance,
-        'total_budgets': total_budgets,
-        'monthly_income': monthly_income,
-        'monthly_expenses': monthly_expenses,
-    })
+        # Calculate monthly trends (last 6 months)
+        today = datetime.date.today()
+        six_months_ago = today - datetime.timedelta(days=180)
+        monthly_income = transactions.filter(
+            transaction_type='Income', date__gte=six_months_ago
+        ).values('date__month').annotate(total=Sum('amount')).order_by('date__month')
+        monthly_expenses = transactions.filter(
+            transaction_type='Expense', date__gte=six_months_ago
+        ).values('date__month').annotate(total=Sum('amount')).order_by('date__month')
+
+        return render(request, 'transactions/landing.html', {
+            'total_income': total_income,
+            'total_expenses': total_expenses,
+            'net_balance': net_balance,
+            'total_budgets': total_budgets,
+            'monthly_income': monthly_income,
+            'monthly_expenses': monthly_expenses,
+        })
+    except Exception as e:
+        # Log the error for debugging (especially on Heroku)
+        logger.error(f"Error in landing_page: {str(e)}")
+        return redirect('login')  # Fallback redirect if something goes wrong
 
 @login_required
 def transaction_list(request):
@@ -259,7 +266,7 @@ class RegisterView(CreateView):
 
 class EditProfileView(LoginRequiredMixin, UpdateView):
     model = User
-    fields = ['username', 'email']
+    form_class = CustomUserEditForm  # Use the custom form instead of fields
     template_name = 'registration/edit_profile.html'
     success_url = reverse_lazy('transaction_list')
 
@@ -369,4 +376,4 @@ def download_report(request):
 
     # Build PDF
     doc.build(elements)
-    return response    
+    return response

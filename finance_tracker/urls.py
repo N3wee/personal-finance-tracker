@@ -23,4 +23,6 @@ urlpatterns = [
     path('accounts/', include('django.contrib.auth.urls')),  # Authentication URLs
     path('register/', RegisterView.as_view(), name='register'),  # Registration route
     path('admin/', admin.site.urls),
+    # Password reset URLs
+    path('password_reset/', include('django.contrib.auth.urls')),  # Uses default password reset views
 ]

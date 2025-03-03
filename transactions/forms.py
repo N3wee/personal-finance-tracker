@@ -1,6 +1,27 @@
 from django import forms
 from .models import Transaction, Budget
+from django.contrib.auth.models import User
 
+class CustomUserEditForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ['username', 'email']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance:
+            # Make username read-only
+            self.fields['username'].widget.attrs['readonly'] = True
+            self.fields['username'].widget.attrs['class'] = 'form-control'
+            # Ensure email is editable
+            self.fields['email'].widget.attrs['class'] = 'form-control'
+
+    def clean_username(self):
+        # Prevent changes to username by returning the original value
+        if self.instance and 'username' in self.cleaned_data:
+            return self.instance.username
+        return self.cleaned_data.get('username')
+    
 class TransactionForm(forms.ModelForm):
     class Meta:
         model = Transaction
