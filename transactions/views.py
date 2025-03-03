@@ -41,6 +41,9 @@ def user_owns_object(user, obj):
     return result
 
 def landing_page(request):
+    # Check if user is authenticated 
+    if not request.user.is_authenticated:
+        return redirect('login')  # Redirect to login if somehow unauthenticated (shouldn't happen with @login_required)
     # Calculate financial summary for the user
     transactions = Transaction.objects.filter(user=request.user)
     total_income = transactions.filter(transaction_type='Income').aggregate(Sum('amount'))['amount__sum'] or 0
@@ -268,4 +271,102 @@ def login_redirect_if_authenticated(view_func):
         if request.user.is_authenticated:
             return redirect('landing_page')  # Redirect to landing page if logged in
         return view_func(request, *args, **kwargs)
-    return wrapper    
+    return wrapper
+
+@login_required
+def download_report(request):
+    # Get user data
+    user = request.user
+    transactions = Transaction.objects.filter(user=user).order_by('-date')
+    budgets = Budget.objects.filter(user=user).order_by('-start_date')
+
+    # Create PDF response
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="financial_report_{}.pdf".format(datetime.date.today())'
+
+    # Create PDF document
+    doc = SimpleDocTemplate(response, pagesize=letter)
+    elements = []
+
+    # Styles
+    styles = getSampleStyleSheet()
+    title = Paragraph("Personal Finance Report - {}".format(datetime.date.today()), styles['Title'])
+    elements.append(title)
+    elements.append(Paragraph("<br/><br/>", styles['Normal']))
+
+    # Financial Summary Table
+    summary_data = [
+        ['Metric', 'Amount'],
+        ['Total Income', '${:.2f}'.format(sum(t.amount for t in transactions.filter(transaction_type='Income')) or 0)],
+        ['Total Expenses', '${:.2f}'.format(sum(t.amount for t in transactions.filter(transaction_type='Expense')) or 0)],
+        ['Net Balance', '${:.2f}'.format(sum(t.amount for t in transactions.filter(transaction_type='Income')) - sum(t.amount for t in transactions.filter(transaction_type='Expense')) or 0)],
+        ['Total Budgets', '${:.2f}'.format(sum(b.amount for b in budgets) or 0)],
+    ]
+    summary_table = Table(summary_data, colWidths=[200, 100])
+    summary_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, 0), 12),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+        ('TEXTCOLOR', (0, 1), (-1, -1), colors.black),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+        ('FONTSIZE', (0, 1), (-1, -1), 10),
+        ('GRID', (0, 0), (-1, -1), 1, colors.black),
+    ]))
+    elements.append(summary_table)
+    elements.append(Paragraph("<br/><br/>", styles['Normal']))
+
+    # Transactions Table
+    if transactions.exists():
+        trans_data = [['Date', 'Title', 'Amount', 'Type', 'Category']]
+        for t in transactions:
+            trans_data.append([t.date.strftime('%Y-%m-%d'), t.title, '${:.2f}'.format(t.amount), t.transaction_type, t.category])
+        trans_table = Table(trans_data, colWidths=[80, 100, 60, 60, 80])
+        trans_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 12),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+            ('TEXTCOLOR', (0, 1), (-1, -1), colors.black),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+            ('FONTSIZE', (0, 1), (-1, -1), 10),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+        ]))
+        elements.append(Paragraph("Transactions", styles['Heading2']))
+        elements.append(trans_table)
+
+    # Budgets Table
+    if budgets.exists():
+        budget_data = [['Category', 'Amount', 'Start Date', 'End Date']]
+        for b in budgets:
+            budget_data.append([b.category, '${:.2f}'.format(b.amount), b.start_date.strftime('%Y-%m-%d'), b.end_date.strftime('%Y-%m-%d') if b.end_date else 'Ongoing'])
+        budget_table = Table(budget_data, colWidths=[100, 60, 80, 80])
+        budget_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 12),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+            ('TEXTCOLOR', (0, 1), (-1, -1), colors.black),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+            ('FONTSIZE', (0, 1), (-1, -1), 10),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+        ]))
+        elements.append(Paragraph("<br/><br/>", styles['Normal']))
+        elements.append(Paragraph("Budgets", styles['Heading2']))
+        elements.append(budget_table)
+
+    # Build PDF
+    doc.build(elements)
+    return response    
