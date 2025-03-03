@@ -18,6 +18,7 @@ import logging
 import requests
 import os
 from django.conf import settings  # Import settings to access TEMPLATES
+from django.template.loader import get_template
 
 from .models import Transaction, Budget
 from .forms import TransactionForm, BudgetForm, CustomUserEditForm  # Import the new form
@@ -46,8 +47,16 @@ def landing_page(request):
     if not request.user.is_authenticated:
         return redirect('login')
     
-    # Debug: Log the template being used
-    logger.debug(f"Rendering landing.html from: {settings.TEMPLATES[0]['DIRS']} and APP_DIRS: {settings.TEMPLATES[0]['APP_DIRS']}")
+    # Detailed debug: Log template resolution
+    logger.debug(f"Rendering landing.html. Settings TEMPLATES: {settings.TEMPLATES}")
+    logger.debug(f"TEMPLATE_DIRS: {settings.TEMPLATES[0]['DIRS']}, APP_DIRS: {settings.TEMPLATES[0]['APP_DIRS']}")
+    
+    try:
+        # Attempt to load the template to debug its location
+        template = get_template('transactions/landing.html')
+        logger.debug(f"Template found at: {template.origin.name}")
+    except Exception as e:
+        logger.error(f"Failed to load template 'transactions/landing.html': {str(e)}")
 
     # Calculate financial summary for the authenticated user
     try:
@@ -69,7 +78,7 @@ def landing_page(request):
 
         # Calculate income/expense by category (for pie charts)
         income_by_category = transactions.filter(transaction_type='Income').values('category').annotate(total=Sum('amount')).order_by('-total')
-        expenses_by_category = transactions.filter(transaction_type='Expense').values('category').annotate(total=Sum('amount')).order_by('-total')  # Fixed typo from '-top' to '-total'
+        expenses_by_category = transactions.filter(transaction_type='Expense').values('category').annotate(total=Sum('amount')).order_by('-total')
 
         # Get recent transactions and budgets (last 5)
         recent_transactions = transactions.order_by('-date')[:5]
