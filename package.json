@@ -19,6 +19,8 @@
   "homepage": "https://github.com/N3wee/personal-finance-tracker#readme",
   "devDependencies": {
     "jest": "^29.7.0"
+  },
+  "dependencies": {
+    "chart.js": "^4.4.8"
   }
-  
 }
