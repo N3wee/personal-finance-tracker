@@ -1,19 +1,26 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Transaction, Budget
-from .forms import TransactionForm, BudgetForm
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.contrib.auth.forms import UserCreationForm
-from django.urls import reverse_lazy
 from django.contrib.auth.models import User
-from django.views.generic.edit import CreateView, UpdateView
+from django.contrib.auth.forms import UserCreationForm
 from django.core.exceptions import PermissionDenied
-from django.db.models import Q
+from django.urls import reverse_lazy
+from django.views.generic.edit import CreateView, UpdateView
+from django.db.models import Sum, Q
 from django.contrib import messages
+from django.http import HttpResponse
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import letter
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
+from reportlab.lib.styles import getSampleStyleSheet
 import datetime
 import logging
 import requests
 import os
+
+from .models import Transaction, Budget
+from .forms import TransactionForm, BudgetForm
+
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -34,7 +41,31 @@ def user_owns_object(user, obj):
     return result
 
 def landing_page(request):
-    return render(request, 'transactions/landing.html')
+    # Calculate financial summary for the user
+    transactions = Transaction.objects.filter(user=request.user)
+    total_income = transactions.filter(transaction_type='Income').aggregate(Sum('amount'))['amount__sum'] or 0
+    total_expenses = transactions.filter(transaction_type='Expense').aggregate(Sum('amount'))['amount__sum'] or 0
+    net_balance = total_income - total_expenses
+    total_budgets = Budget.objects.filter(user=request.user).aggregate(Sum('amount'))['amount__sum'] or 0
+
+    # Calculate monthly trends (last 6 months)
+    today = datetime.date.today()
+    six_months_ago = today - datetime.timedelta(days=180)
+    monthly_income = transactions.filter(
+        transaction_type='Income', date__gte=six_months_ago
+    ).values('date__month').annotate(total=Sum('amount')).order_by('date__month')
+    monthly_expenses = transactions.filter(
+        transaction_type='Expense', date__gte=six_months_ago
+    ).values('date__month').annotate(total=Sum('amount')).order_by('date__month')
+
+    return render(request, 'transactions/landing.html', {
+        'total_income': total_income,
+        'total_expenses': total_expenses,
+        'net_balance': net_balance,
+        'total_budgets': total_budgets,
+        'monthly_income': monthly_income,
+        'monthly_expenses': monthly_expenses,
+    })
 
 @login_required
 def transaction_list(request):
