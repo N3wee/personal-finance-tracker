@@ -41,26 +41,16 @@ def user_owns_object(user, obj):
                  f"Object type {type(obj).__name__}, Object ID {obj.id if obj.id else 'None'}, Result {result}")
     return result
 
-@login_required(login_url='login')
+@login_required  # No need to specify login_url, Django uses LOGIN_URL from settings.py
 def landing_page(request):
-    # Ensure user is authenticated
-    if not request.user.is_authenticated:
-        return redirect('login')
-    
-    # Debug: Log template resolution
-    logger.debug(f"Rendering transactions/landing.html. Settings TEMPLATES: {settings.TEMPLATES}")
-    logger.debug(f"TEMPLATE_DIRS: {settings.TEMPLATES[0]['DIRS']}, APP_DIRS: {settings.TEMPLATES[0]['APP_DIRS']}")
-    
-    try:
-        # Attempt to load the template to debug its location
-        template = get_template('transactions/landing.html')  # Use 'transactions/landing.html' for app-specific templates
-        logger.debug(f"Template found at: {template.origin.name}")
-    except Exception as e:
-        logger.error(f"Failed to load template 'transactions/landing.html': {str(e)}")
+    # Log template access
+    logger.debug("Rendering transactions/landing.html for user: %s", request.user.username)
 
-    # Calculate financial summary for the authenticated user
     try:
+        # Retrieve transactions for the logged-in user
         transactions = Transaction.objects.filter(user=request.user)
+
+        # Calculate financial summary
         total_income = transactions.filter(transaction_type='Income').aggregate(Sum('amount'))['amount__sum'] or 0
         total_expenses = transactions.filter(transaction_type='Expense').aggregate(Sum('amount'))['amount__sum'] or 0
         net_balance = total_income - total_expenses
@@ -72,33 +62,47 @@ def landing_page(request):
         monthly_income = transactions.filter(
             transaction_type='Income', date__gte=six_months_ago
         ).values('date__month').annotate(total=Sum('amount')).order_by('date__month')
+
         monthly_expenses = transactions.filter(
             transaction_type='Expense', date__gte=six_months_ago
         ).values('date__month').annotate(total=Sum('amount')).order_by('date__month')
 
-        # Calculate income/expense by category (for pie charts)
+        # Get income/expense by category (for pie charts)
         income_by_category = transactions.filter(transaction_type='Income').values('category').annotate(total=Sum('amount')).order_by('-total')
         expenses_by_category = transactions.filter(transaction_type='Expense').values('category').annotate(total=Sum('amount')).order_by('-total')
 
         # Get recent transactions and budgets (last 5)
-        recent_transactions = transactions.order_by('-date')[:5]
-        recent_budgets = Budget.objects.filter(user=request.user).order_by('-start_date')[:5]
+        recent_transactions = transactions.order_by('-date')[:5] if transactions.exists() else []
+        recent_budgets = Budget.objects.filter(user=request.user).order_by('-start_date')[:5] if Budget.objects.filter(user=request.user).exists() else []
 
-        return render(request, 'transactions/landing.html', {  # Use 'transactions/landing.html' for app-specific templates
+        return render(request, 'transactions/landing.html', {
             'total_income': total_income,
             'total_expenses': total_expenses,
             'net_balance': net_balance,
             'total_budgets': total_budgets,
-            'monthly_income': monthly_income,
-            'monthly_expenses': monthly_expenses,
-            'income_by_category': income_by_category,
-            'expenses_by_category': expenses_by_category,
+            'monthly_income': list(monthly_income),
+            'monthly_expenses': list(monthly_expenses),
+            'income_by_category': list(income_by_category),
+            'expenses_by_category': list(expenses_by_category),
             'recent_transactions': recent_transactions,
             'recent_budgets': recent_budgets,
         })
+
     except Exception as e:
         logger.error(f"Error in landing_page: {str(e)}")
-        return redirect('login')
+        return render(request, 'transactions/landing.html', {
+            'error_message': "An error occurred while loading your dashboard.",
+            'total_income': 0,
+            'total_expenses': 0,
+            'net_balance': 0,
+            'total_budgets': 0,
+            'monthly_income': [],
+            'monthly_expenses': [],
+            'income_by_category': [],
+            'expenses_by_category': [],
+            'recent_transactions': [],
+            'recent_budgets': [],
+        })
 
 @login_required
 def transaction_list(request):
