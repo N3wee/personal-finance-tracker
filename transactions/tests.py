@@ -3,7 +3,9 @@ from django.contrib.auth.models import User
 from transactions.models import Transaction, Budget
 from transactions.forms import TransactionForm, BudgetForm
 from django.urls import reverse
-from django.core.exceptions import ValidationError  # Import added for clarity
+from django.core.exceptions import ValidationError
+import datetime
+from django.http import HttpResponse
 
 class TransactionModelTest(TestCase):
     def setUp(self):
@@ -22,14 +24,14 @@ class TransactionModelTest(TestCase):
         self.assertEqual(self.transaction.title, 'Test Income')
         self.assertEqual(self.transaction.amount, 1000.00)
         self.assertEqual(self.transaction.transaction_type, 'Income')
-        self.assertTrue(self.transaction.user == self.user)
+        self.assertEqual(self.transaction.user, self.user)
 
     def test_transaction_validation(self):
-        with self.assertRaises(ValidationError):  # Updated to ValidationError
+        with self.assertRaises(ValidationError):
             Transaction.objects.create(
                 user=self.user,
                 title='Invalid Amount',
-                amount=-100.00,  # Should raise validation error
+                amount=-100.00,
                 transaction_type='Expense',
                 category='Test',
                 date='2025-02-01',
@@ -50,14 +52,14 @@ class BudgetModelTest(TestCase):
     def test_budget_creation(self):
         self.assertEqual(self.budget.category, 'Food')
         self.assertEqual(self.budget.amount, 500.00)
-        self.assertTrue(self.budget.user == self.user)
+        self.assertEqual(self.budget.user, self.user)
 
     def test_budget_validation(self):
-        with self.assertRaises(ValidationError):  # Updated to ValidationError
+        with self.assertRaises(ValidationError):
             Budget.objects.create(
                 user=self.user,
                 category='Invalid Amount',
-                amount=-50.00,  # Should raise validation error
+                amount=-50.00,
                 start_date='2025-02-01',
                 end_date='2025-02-28'
             )
@@ -81,7 +83,7 @@ class TransactionFormTest(TestCase):
     def test_invalid_transaction_form(self):
         form_data = {
             'title': '',
-            'amount': -100.00,  # Invalid amount
+            'amount': -100.00,
             'transaction_type': 'Income',
             'category': 'Salary',
             'date': '2025-02-01',
@@ -109,7 +111,7 @@ class BudgetFormTest(TestCase):
     def test_invalid_budget_form(self):
         form_data = {
             'category': '',
-            'amount': -50.00,  # Invalid amount
+            'amount': -50.00,
             'start_date': '2025-02-01',
             'end_date': '2025-02-28'
         }
@@ -142,8 +144,8 @@ class TransactionViewTest(TestCase):
 
     def test_transaction_list_unauthenticated(self):
         response = self.client.get(reverse('transaction_list'))
-        self.assertEqual(response.status_code, 302)  # Redirect to login
-        self.assertRedirects(response, '/accounts/login/?next=/transactions/')
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, '/accounts/login/?next=/transactions/transactions/')
 
     def test_add_transaction_authenticated(self):
         self.client.login(username='testuser', password='testpass123')
@@ -155,7 +157,7 @@ class TransactionViewTest(TestCase):
             'date': '2025-02-02',
             'payment_method': 'cash'
         })
-        self.assertEqual(response.status_code, 302)  # Redirect to transaction_list
+        self.assertEqual(response.status_code, 302)
         self.assertTrue(Transaction.objects.filter(title='New Expense').exists())
 
     def test_edit_transaction_owner(self):
@@ -173,7 +175,7 @@ class TransactionViewTest(TestCase):
         self.assertEqual(self.transaction.title, 'Updated Income')
 
     def test_edit_transaction_non_owner(self):
-        other_user = User.objects.create_user(username='otheruser', password='testpass123')  # Regular user
+        other_user = User.objects.create_user(username='otheruser', password='testpass123')
         self.client.login(username='otheruser', password='testpass123')
         response = self.client.post(reverse('edit_transaction', kwargs={'transaction_id': self.transaction.id}), {
             'title': 'Unauthorized Edit',
@@ -183,9 +185,9 @@ class TransactionViewTest(TestCase):
             'date': '2025-02-01',
             'payment_method': 'bank_transfer'
         })
-        self.assertEqual(response.status_code, 403)  # Expect Permission Denied
+        self.assertEqual(response.status_code, 403)
         self.transaction.refresh_from_db()
-        self.assertEqual(self.transaction.title, 'Test Income')  # Unchanged
+        self.assertEqual(self.transaction.title, 'Test Income')
 
     def test_edit_transaction_superuser(self):
         self.client.login(username='nay_s', password='adminpass123')
@@ -197,7 +199,7 @@ class TransactionViewTest(TestCase):
             'date': '2025-02-01',
             'payment_method': 'bank_transfer'
         })
-        self.assertEqual(response.status_code, 302)  # Superuser succeeds
+        self.assertEqual(response.status_code, 302)
         self.transaction.refresh_from_db()
         self.assertEqual(self.transaction.title, 'Admin Edit')
 
@@ -211,13 +213,13 @@ class TransactionViewTest(TestCase):
         other_user = User.objects.create_user(username='otheruser', password='testpass123')
         self.client.login(username='otheruser', password='testpass123')
         response = self.client.post(reverse('delete_transaction', kwargs={'transaction_id': self.transaction.id}))
-        self.assertEqual(response.status_code, 403)  # Expect Permission Denied
-        self.assertTrue(Transaction.objects.filter(id=self.transaction.id).exists())  # Not deleted
+        self.assertEqual(response.status_code, 403)
+        self.assertTrue(Transaction.objects.filter(id=self.transaction.id).exists())
 
     def test_delete_transaction_superuser(self):
         self.client.login(username='nay_s', password='adminpass123')
         response = self.client.post(reverse('delete_transaction', kwargs={'transaction_id': self.transaction.id}))
-        self.assertEqual(response.status_code, 302)  # Superuser succeeds
+        self.assertEqual(response.status_code, 302)
         self.assertFalse(Transaction.objects.filter(id=self.transaction.id).exists())
 
 class BudgetViewTest(TestCase):
@@ -242,7 +244,7 @@ class BudgetViewTest(TestCase):
 
     def test_budget_list_unauthenticated(self):
         response = self.client.get(reverse('budget_list'))
-        self.assertEqual(response.status_code, 302)  # Redirect to login
+        self.assertEqual(response.status_code, 302)
         self.assertRedirects(response, '/accounts/login/?next=/transactions/budgets/')
 
     def test_add_budget_authenticated(self):
@@ -253,7 +255,7 @@ class BudgetViewTest(TestCase):
             'start_date': '2025-03-01',
             'end_date': '2025-03-31'
         })
-        self.assertEqual(response.status_code, 302)  # Redirect to budget_list
+        self.assertEqual(response.status_code, 302)
         self.assertTrue(Budget.objects.filter(category='Rent').exists())
 
     def test_edit_budget_owner(self):
@@ -277,9 +279,9 @@ class BudgetViewTest(TestCase):
             'start_date': '2025-02-01',
             'end_date': '2025-02-28'
         })
-        self.assertEqual(response.status_code, 403)  # Expect Permission Denied
+        self.assertEqual(response.status_code, 403)
         self.budget.refresh_from_db()
-        self.assertEqual(self.budget.category, 'Food')  # Unchanged
+        self.assertEqual(self.budget.category, 'Food')
 
     def test_edit_budget_superuser(self):
         self.client.login(username='nay_s', password='adminpass123')
@@ -289,7 +291,7 @@ class BudgetViewTest(TestCase):
             'start_date': '2025-02-01',
             'end_date': '2025-02-28'
         })
-        self.assertEqual(response.status_code, 302)  # Superuser succeeds
+        self.assertEqual(response.status_code, 302)
         self.budget.refresh_from_db()
         self.assertEqual(self.budget.category, 'Admin Food')
 
@@ -303,11 +305,78 @@ class BudgetViewTest(TestCase):
         other_user = User.objects.create_user(username='otheruser', password='testpass123')
         self.client.login(username='otheruser', password='testpass123')
         response = self.client.post(reverse('delete_budget', kwargs={'budget_id': self.budget.id}))
-        self.assertEqual(response.status_code, 403)  # Expect Permission Denied
-        self.assertTrue(Budget.objects.filter(id=self.budget.id).exists())  # Not deleted
+        self.assertEqual(response.status_code, 403)
+        self.assertTrue(Budget.objects.filter(id=self.budget.id).exists())
 
     def test_delete_budget_superuser(self):
         self.client.login(username='nay_s', password='adminpass123')
         response = self.client.post(reverse('delete_budget', kwargs={'budget_id': self.budget.id}))
-        self.assertEqual(response.status_code, 302)  # Superuser succeeds
+        self.assertEqual(response.status_code, 302)
         self.assertFalse(Budget.objects.filter(id=self.budget.id).exists())
+
+class ViewTest(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username='testuser4', email='testuser4@example.com', password='testpass123')
+        self.client = Client()
+        self.client.login(username='testuser4', password='testpass123')
+
+    def test_landing_page_authenticated(self):
+        response = self.client.get(reverse('landing_page'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'transactions/landing.html')
+        self.assertContains(response, 'Personal Finance Dashboard')
+
+    def test_landing_page_unauthenticated(self):
+        self.client.logout()
+        response = self.client.get(reverse('landing_page'))
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, '/accounts/login/?next=/')
+
+    def test_download_report_authenticated(self):
+        Transaction.objects.create(
+            user=self.user,
+            title='Test Income',
+            amount=2000.00,
+            transaction_type='Income',
+            category='Wage',
+            date=datetime.date.today()
+        )
+        Budget.objects.create(
+            user=self.user,
+            category='Food',
+            amount=500.00,
+            start_date=datetime.date.today(),
+            end_date=datetime.date.today() + datetime.timedelta(days=30)
+        )
+        response = self.client.get(reverse('download_report'))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'application/pdf')
+        self.assertTrue(response['Content-Disposition'].startswith('attachment; filename="financial_report_'))
+
+    def test_download_report_unauthenticated(self):
+        self.client.logout()
+        response = self.client.get(reverse('download_report'))
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, '/accounts/login/?next=/transactions/download_report/')
+
+    def test_large_dataset_performance(self):
+        for i in range(100):
+            Transaction.objects.create(
+                user=self.user,
+                title=f'Transaction {i}',
+                amount=100.00 * (i + 1),
+                transaction_type='Income' if i % 2 == 0 else 'Expense',
+                category='Test',
+                date=datetime.date.today() - datetime.timedelta(days=i)
+            )
+        for i in range(50):
+            Budget.objects.create(
+                user=self.user,
+                category=f'Category {i}',
+                amount=100.00 * (i + 1),
+                start_date=datetime.date.today() - datetime.timedelta(days=i),
+                end_date=datetime.date.today() + datetime.timedelta(days=i)
+            )
+        response = self.client.get(reverse('landing_page'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'transactions/landing.html')

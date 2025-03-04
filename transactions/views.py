@@ -8,7 +8,7 @@ from django.urls import reverse_lazy
 from django.views.generic.edit import CreateView, UpdateView
 from django.db.models import Sum
 from django.contrib import messages
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseForbidden
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
@@ -27,7 +27,15 @@ from .forms import TransactionForm, BudgetForm, CustomUserEditForm  # Import the
 logger = logging.getLogger(__name__)
 
 def user_owns_object(user, obj):
-    """Check if the user owns the object or is a superuser."""
+    """Check if the user owns the object or is a superuser.
+
+    Args:
+        user: The Django User instance checking ownership.
+        obj: The object (Transaction or Budget) to check ownership for.
+
+    Returns:
+        bool: True if the user is the owner or a superuser, False otherwise.
+    """
     if obj is None:
         logger.error("Object is None in user_owns_object")
         return False
@@ -35,15 +43,23 @@ def user_owns_object(user, obj):
     if owner is None:
         logger.error(f"No user associated with object: {obj}")
         return False
-    # Allow superusers to bypass ownership check
     result = user.is_superuser or owner == user
     logger.debug(f"Checking ownership: User {user.username}, Object user {owner.username if owner else 'None'}, "
                  f"Object type {type(obj).__name__}, Object ID {obj.id if obj.id else 'None'}, Result {result}")
     return result
 
-@login_required  # No need to specify login_url, Django uses LOGIN_URL from settings.py
+@login_required
 def landing_page(request):
-    # Log template access
+    """Render the financial dashboard for the authenticated user.
+
+    Displays a summary of transactions, budgets, and financial metrics for the logged-in user.
+
+    Args:
+        request: The HTTP request object.
+
+    Returns:
+        HttpResponse: Rendered HTML response with financial data or error message if an exception occurs.
+    """
     logger.debug("Rendering transactions/landing.html for user: %s", request.user.username)
 
     try:
@@ -106,6 +122,16 @@ def landing_page(request):
 
 @login_required
 def transaction_list(request):
+    """Display a list of transactions for the authenticated user with filtering and sorting options.
+
+    Supports filtering by transaction type, category, date range, and sorting by date or amount.
+
+    Args:
+        request: The HTTP request object.
+
+    Returns:
+        HttpResponse: Rendered HTML response with transaction list and filtering options, or redirect if unauthenticated.
+    """
     transactions = Transaction.objects.filter(user=request.user)
 
     # Get filtering parameters from request
@@ -171,6 +197,16 @@ def transaction_list(request):
 
 @login_required
 def add_transaction(request):
+    """Handle the addition of a new transaction for the authenticated user.
+
+    Processes form submission, validates data, and redirects to the transaction list upon success.
+
+    Args:
+        request: The HTTP request object.
+
+    Returns:
+        HttpResponse: Rendered form page or redirect to transaction list on success.
+    """
     logger.debug("Processing add_transaction request for user: %s", request.user.username)
     if request.method == "POST":
         logger.debug("Form submitted with data: %s", request.POST)
@@ -192,11 +228,22 @@ def add_transaction(request):
 
 @login_required
 def edit_transaction(request, transaction_id):
+    """Handle the editing of an existing transaction for the authenticated user.
+
+    Checks ownership, processes form submission, validates data, and redirects to the transaction list on success.
+
+    Args:
+        request: The HTTP request object.
+        transaction_id: The ID of the transaction to edit.
+
+    Returns:
+        HttpResponse: Rendered form page or redirect to transaction list on success, or HttpResponseForbidden if permission denied.
+    """
     transaction = get_object_or_404(Transaction, id=transaction_id)
     logger.debug(f"Attempting to edit transaction {transaction_id} by user {request.user.username}")
     if not user_owns_object(request.user, transaction):
-        logger.error("Permission denied: User %s tried to edit transaction %s owned by %s", request.user.username, transaction_id, transaction.user.username if transaction.user else "None")
-        raise PermissionDenied("You do not have permission to edit this transaction.")
+        logger.error("Permission denied: User %s tried to edit transaction %d owned by %s", request.user.username, transaction_id, transaction.user.username if transaction.user else "None")
+        return HttpResponseForbidden("You do not have permission to edit this transaction.")
     if request.method == "POST":
         form = TransactionForm(request.POST, instance=transaction)
         if form.is_valid():
@@ -204,7 +251,7 @@ def edit_transaction(request, transaction_id):
             logger.debug(f"Transaction {transaction_id} updated by user {request.user.username}")
             return redirect('transaction_list')
         else:
-            logger.error("Form errors for editing transaction %s by user %s: %s", transaction_id, request.user.username, form.errors)
+            logger.error("Form errors for editing transaction %d by user %s: %s", transaction_id, request.user.username, form.errors)
             print(form.errors)  # Debug: Check terminal for errors
     else:
         form = TransactionForm(instance=transaction)
@@ -212,11 +259,22 @@ def edit_transaction(request, transaction_id):
 
 @login_required
 def delete_transaction(request, transaction_id):
+    """Handle the deletion of an existing transaction for the authenticated user.
+
+    Checks ownership, processes POST request, and redirects to the transaction list on success.
+
+    Args:
+        request: The HTTP request object.
+        transaction_id: The ID of the transaction to delete.
+
+    Returns:
+        HttpResponse: Rendered confirmation page or redirect to transaction list on success, or HttpResponseForbidden if permission denied.
+    """
     transaction = get_object_or_404(Transaction, id=transaction_id)
     logger.debug(f"Attempting to delete transaction {transaction_id} by user {request.user.username}")
     if not user_owns_object(request.user, transaction):
-        logger.error("Permission denied: User %s tried to delete transaction %s owned by %s", request.user.username, transaction_id, transaction.user.username if transaction.user else "None")
-        raise PermissionDenied("You do not have permission to delete this transaction.")
+        logger.error("Permission denied: User %s tried to delete transaction %d owned by %s", request.user.username, transaction_id, transaction.user.username if transaction.user else "None")
+        return HttpResponseForbidden("You do not have permission to delete this transaction.")
     if request.method == "POST":
         transaction.delete()
         logger.debug(f"Transaction {transaction_id} deleted by user {request.user.username}")
@@ -225,11 +283,29 @@ def delete_transaction(request, transaction_id):
 
 @login_required
 def budget_list(request):
+    """Display a list of budgets for the authenticated user.
+
+    Args:
+        request: The HTTP request object.
+
+    Returns:
+        HttpResponse: Rendered HTML response with budget list.
+    """
     budgets = Budget.objects.filter(user=request.user)
     return render(request, 'transactions/budget_list.html', {'budgets': budgets})
 
 @login_required
 def add_budget(request):
+    """Handle the addition of a new budget for the authenticated user.
+
+    Processes form submission, validates data, and redirects to the budget list upon success.
+
+    Args:
+        request: The HTTP request object.
+
+    Returns:
+        HttpResponse: Rendered form page or redirect to budget list on success.
+    """
     logger.debug("Processing add_budget request for user: %s", request.user.username)
     if request.method == "POST":
         logger.debug("Form submitted with data: %s", request.POST)
@@ -251,11 +327,22 @@ def add_budget(request):
 
 @login_required
 def edit_budget(request, budget_id):
+    """Handle the editing of an existing budget for the authenticated user.
+
+    Checks ownership, processes form submission, validates data, and redirects to the budget list on success.
+
+    Args:
+        request: The HTTP request object.
+        budget_id: The ID of the budget to edit.
+
+    Returns:
+        HttpResponse: Rendered form page or redirect to budget list on success, or HttpResponseForbidden if permission denied.
+    """
     budget = get_object_or_404(Budget, id=budget_id)
     logger.debug(f"Attempting to edit budget {budget_id} by user {request.user.username}")
     if not user_owns_object(request.user, budget):
-        logger.error("Permission denied: User %s tried to edit budget %s owned by %s", request.user.username, budget_id, budget.user.username if budget.user else "None")
-        raise PermissionDenied("You do not have permission to edit this budget.")
+        logger.error("Permission denied: User %s tried to edit budget %d owned by %s", request.user.username, budget_id, budget.user.username if budget.user else "None")
+        return HttpResponseForbidden("You do not have permission to edit this budget.")
     if request.method == "POST":
         form = BudgetForm(request.POST, instance=budget)
         if form.is_valid():
@@ -263,7 +350,7 @@ def edit_budget(request, budget_id):
             logger.debug(f"Budget {budget_id} updated by user {request.user.username}")
             return redirect('budget_list')
         else:
-            logger.error("Form errors for editing budget %s by user %s: %s", budget_id, request.user.username, form.errors)
+            logger.error("Form errors for editing budget %d by user %s: %s", budget_id, request.user.username, form.errors)
             print(form.errors)  # Debug: Check terminal for errors
     else:
         form = BudgetForm(instance=budget)
@@ -271,11 +358,22 @@ def edit_budget(request, budget_id):
 
 @login_required
 def delete_budget(request, budget_id):
+    """Handle the deletion of an existing budget for the authenticated user.
+
+    Checks ownership, processes POST request, and redirects to the budget list on success.
+
+    Args:
+        request: The HTTP request object.
+        budget_id: The ID of the budget to delete.
+
+    Returns:
+        HttpResponse: Rendered confirmation page or redirect to budget list on success, or HttpResponseForbidden if permission denied.
+    """
     budget = get_object_or_404(Budget, id=budget_id)
     logger.debug(f"Attempting to delete budget {budget_id} by user {request.user.username}")
     if not user_owns_object(request.user, budget):
-        logger.error("Permission denied: User %s tried to delete budget {budget_id} owned by %s", request.user.username, budget_id, budget.user.username if budget.user else "None")
-        raise PermissionDenied("You do not have permission to delete this budget.")
+        logger.error("Permission denied: User %s tried to delete budget %d owned by %s", request.user.username, budget_id, budget.user.username if budget.user else "None")
+        return HttpResponseForbidden("You do not have permission to delete this budget.")
     if request.method == "POST":
         budget.delete()
         logger.debug(f"Budget {budget_id} deleted by user {request.user.username}")
@@ -283,6 +381,15 @@ def delete_budget(request, budget_id):
     return render(request, 'transactions/delete_budget.html', {'budget': budget})
 
 class RegisterView(CreateView):
+    """Handle user registration using Django's UserCreationForm.
+
+    Displays a registration form, validates user input, and redirects to the login page on success.
+
+    Attributes:
+        form_class: The UserCreationForm for registration.
+        template_name: The HTML template for the registration form.
+        success_url: The URL to redirect to after successful registration.
+    """
     form_class = UserCreationForm
     template_name = 'registration/register.html'
     success_url = reverse_lazy('login')
@@ -292,6 +399,16 @@ class RegisterView(CreateView):
         return super().form_valid(form)
 
 class EditProfileView(LoginRequiredMixin, UpdateView):
+    """Handle editing of user profile for authenticated users.
+
+    Uses a custom form to update user details, ensuring only the authenticated user can edit their profile.
+
+    Attributes:
+        model: The User model.
+        form_class: The CustomUserEditForm for profile updates.
+        template_name: The HTML template for the edit profile form.
+        success_url: The URL to redirect to after successful update.
+    """
     model = User
     form_class = CustomUserEditForm  # Use the custom form instead of fields
     template_name = 'registration/edit_profile.html'
@@ -299,8 +416,18 @@ class EditProfileView(LoginRequiredMixin, UpdateView):
 
     def get_object(self):
         return self.request.user
-    
+
 def login_redirect_if_authenticated(view_func):
+    """Decorator to redirect authenticated users to the landing page.
+
+    Prevents logged-in users from accessing certain views (e.g., login page).
+
+    Args:
+        view_func: The view function to wrap.
+
+    Returns:
+        function: The wrapped view function.
+    """
     def wrapper(request, *args, **kwargs):
         if request.user.is_authenticated:
             return redirect('landing_page')  # Redirect to landing page if logged in
@@ -309,6 +436,16 @@ def login_redirect_if_authenticated(view_func):
 
 @login_required
 def download_report(request):
+    """Generate and download a PDF report of the user's financial data.
+
+    Includes financial summary, transactions, and budgets for the authenticated user.
+
+    Args:
+        request: The HTTP request object.
+
+    Returns:
+        HttpResponse: PDF response with financial report attached.
+    """
     # Get user data
     user = request.user
     transactions = Transaction.objects.filter(user=user).order_by('-date')
