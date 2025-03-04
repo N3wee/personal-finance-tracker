@@ -2,7 +2,7 @@ from django.urls import path
 from . import views  # Import views from the current directory
 
 urlpatterns = [
-    path('', views.landing_page, name='landing_page'),  # Landing page at root /
+    # path('', views.landing_page, name='landing_page'),  # Removed or commented out
     path('transactions/', views.transaction_list, name='transaction_list'),  # Transaction list at /transactions/
     path('transactions/add/', views.add_transaction, name='add_transaction'),
     path('transactions/<int:transaction_id>/edit/', views.edit_transaction, name='edit_transaction'),
