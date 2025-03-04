@@ -47,13 +47,13 @@ def landing_page(request):
     if not request.user.is_authenticated:
         return redirect('login')
     
-    # Detailed debug: Log template resolution
-    logger.debug(f"Rendering landing.html. Settings TEMPLATES: {settings.TEMPLATES}")
+    # Debug: Log template resolution
+    logger.debug(f"Rendering transactions/landing.html. Settings TEMPLATES: {settings.TEMPLATES}")
     logger.debug(f"TEMPLATE_DIRS: {settings.TEMPLATES[0]['DIRS']}, APP_DIRS: {settings.TEMPLATES[0]['APP_DIRS']}")
     
     try:
         # Attempt to load the template to debug its location
-        template = get_template('transactions/landing.html')
+        template = get_template('transactions/landing.html')  # Use 'transactions/landing.html' for app-specific templates
         logger.debug(f"Template found at: {template.origin.name}")
     except Exception as e:
         logger.error(f"Failed to load template 'transactions/landing.html': {str(e)}")
@@ -84,7 +84,7 @@ def landing_page(request):
         recent_transactions = transactions.order_by('-date')[:5]
         recent_budgets = Budget.objects.filter(user=request.user).order_by('-start_date')[:5]
 
-        return render(request, 'transactions/landing.html', {
+        return render(request, 'transactions/landing.html', {  # Use 'transactions/landing.html' for app-specific templates
             'total_income': total_income,
             'total_expenses': total_expenses,
             'net_balance': net_balance,
