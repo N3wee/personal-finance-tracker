@@ -1,6 +1,5 @@
-{% extends 'base.html' %}
 {% load static %}
-
+{% extends 'base.html' %}
 {% block content %}
 <div class="container mt-5">
     <div class="row justify-content-center">
@@ -111,18 +110,18 @@
     </div>
 
     <!-- Chart.js Script -->
-    <script src="{% static 'js/chart.js' %}" defer></script>
+    <script src="{% static 'js/chart.js' %}" defer></script>  <!-- Use local Chart.js UMD version -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Monthly Income and Expenses Bar Chart
             const ctxMonthly = document.getElementById('monthlyChart').getContext('2d');
             const monthlyIncome = {{ monthly_income|safe }};
             const monthlyExpenses = {{ monthly_expenses|safe }};
-    
+
             const monthlyLabels = monthlyIncome.map(item => new Date(0, item.date__month - 1).toLocaleString('default', { month: 'long' }));
             const incomeData = monthlyIncome.map(item => item.total || 0);
             const expensesData = monthlyExpenses.map(item => item.total || 0);
-    
+
             new Chart(ctxMonthly, {
                 type: 'bar',
                 data: {
@@ -168,13 +167,13 @@
                     }
                 }
             });
-    
+
             // Income by Category Pie Chart
             const ctxIncomePie = document.getElementById('incomePieChart').getContext('2d');
-            const incomeCategories = {{ income_by_category|safe }};
+            const incomeCategories = {{ income_by_category|safe }};  <!-- Fixed from 'income_by_context' to match views.py -->
             const incomeLabels = incomeCategories.map(item => item.category);
             const incomeData = incomeCategories.map(item => item.total || 0);
-    
+
             new Chart(ctxIncomePie, {
                 type: 'pie',
                 data: {
@@ -199,13 +198,13 @@
                     }
                 }
             });
-    
+
             // Expenses by Category Pie Chart
             const ctxExpensesPie = document.getElementById('expensesPieChart').getContext('2d');
             const expensesCategories = {{ expenses_by_category|safe }};
             const expensesLabels = expensesCategories.map(item => item.category);
             const expensesData = expensesCategories.map(item => item.total || 0);
-    
+
             new Chart(ctxExpensesPie, {
                 type: 'pie',
                 data: {
