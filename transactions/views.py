@@ -314,9 +314,15 @@ def download_report(request):
     transactions = Transaction.objects.filter(user=user).order_by('-date')
     budgets = Budget.objects.filter(user=user).order_by('-start_date')
 
+    # Calculate financial summary
+    total_income = sum(t.amount for t in transactions.filter(transaction_type='Income')) or 0
+    total_expenses = sum(t.amount for t in transactions.filter(transaction_type='Expense')) or 0
+    net_balance = total_income - total_expenses
+    total_budgets = sum(b.amount for b in budgets) or 0
+
     # Create PDF response
     response = HttpResponse(content_type='application/pdf')
-    response['Content-Disposition'] = 'attachment; filename="financial_report_{}.pdf".format(datetime.date.today())'
+    response['Content-Disposition'] = f'attachment; filename="financial_report_{datetime.date.today()}.pdf"'
 
     # Create PDF document
     doc = SimpleDocTemplate(response, pagesize=letter)
@@ -324,17 +330,17 @@ def download_report(request):
 
     # Styles
     styles = getSampleStyleSheet()
-    title = Paragraph("Personal Finance Report - {}".format(datetime.date.today()), styles['Title'])
+    title = Paragraph(f"Personal Finance Report - {datetime.date.today()}", styles['Title'])
     elements.append(title)
     elements.append(Paragraph("<br/><br/>", styles['Normal']))
 
     # Financial Summary Table
     summary_data = [
         ['Metric', 'Amount'],
-        ['Total Income', '${:.2f}'.format(sum(t.amount for t in transactions.filter(transaction_type='Income')) or 0)],
-        ['Total Expenses', '${:.2f}'.format(sum(t.amount for t in transactions.filter(transaction_type='Expense')) or 0)],
-        ['Net Balance', '${:.2f}'.format(sum(t.amount for t in transactions.filter(transaction_type='Income')) - sum(t.amount for t in transactions.filter(transaction_type='Expense')) or 0)],
-        ['Total Budgets', '${:.2f}'.format(sum(b.amount for b in budgets) or 0)],
+        ['Total Income', f'${total_income:.2f}'],
+        ['Total Expenses', f'${total_expenses:.2f}'],
+        ['Net Balance', f'${net_balance:.2f}'],
+        ['Total Budgets', f'${total_budgets:.2f}'],
     ]
     summary_table = Table(summary_data, colWidths=[200, 100])
     summary_table.setStyle(TableStyle([
@@ -358,7 +364,7 @@ def download_report(request):
     if transactions.exists():
         trans_data = [['Date', 'Title', 'Amount', 'Type', 'Category']]
         for t in transactions:
-            trans_data.append([t.date.strftime('%Y-%m-%d'), t.title, '${:.2f}'.format(t.amount), t.transaction_type, t.category])
+            trans_data.append([t.date.strftime('%Y-%m-%d'), t.title, f'${t.amount:.2f}', t.transaction_type, t.category])
         trans_table = Table(trans_data, colWidths=[80, 100, 60, 60, 80])
         trans_table.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
@@ -381,7 +387,7 @@ def download_report(request):
     if budgets.exists():
         budget_data = [['Category', 'Amount', 'Start Date', 'End Date']]
         for b in budgets:
-            budget_data.append([b.category, '${:.2f}'.format(b.amount), b.start_date.strftime('%Y-%m-%d'), b.end_date.strftime('%Y-%m-%d') if b.end_date else 'Ongoing'])
+            budget_data.append([b.category, f'${b.amount:.2f}', b.start_date.strftime('%Y-%m-%d'), b.end_date.strftime('%Y-%m-%d') if b.end_date else 'Ongoing'])
         budget_table = Table(budget_data, colWidths=[100, 60, 80, 80])
         budget_table.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
