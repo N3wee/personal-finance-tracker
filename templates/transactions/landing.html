@@ -110,19 +110,18 @@
     </div>
 
     <!-- Chart.js Script -->
-    <script src="{% static 'js/chart.js' %}" defer></script>  <!-- Use local Chart.js UMD version -->
+    <script src="{% static 'js/chart.js' %}" defer></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Monthly Income and Expenses Bar Chart
-            const ctxMonthly = document.getElementById('monthlyChart').getContext('2d');
             const monthlyIncome = {{ monthly_income|safe }};
             const monthlyExpenses = {{ monthly_expenses|safe }};
 
-            const monthlyLabels = monthlyIncome.map(item => new Date(0, item.date__month - 1).toLocaleString('default', { month: 'long' }));
-            const incomeData = monthlyIncome.map(item => item.total || 0);
-            const expensesData = monthlyExpenses.map(item => item.total || 0);
+            const monthlyLabels = monthlyIncome.map(item => new Date(0, item.date__month - 1).toLocaleString('default', { month: 'long' })) || [];
+            const incomeData = monthlyIncome.map(item => item.total || 0) || [];
+            const expensesData = monthlyExpenses.map(item => item.total || 0) || [];
 
-            new Chart(ctxMonthly, {
+            new Chart(document.getElementById('monthlyChart').getContext('2d'), {
                 type: 'bar',
                 data: {
                     labels: monthlyLabels,
@@ -157,77 +156,50 @@
                         }
                     },
                     plugins: {
-                        legend: {
-                            position: 'top'
-                        },
-                        title: {
-                            display: true,
-                            text: 'Monthly Income and Expenses'
-                        }
+                        legend: { position: 'top' },
+                        title: { display: true, text: 'Monthly Income and Expenses' }
                     }
                 }
             });
 
             // Income by Category Pie Chart
-            const ctxIncomePie = document.getElementById('incomePieChart').getContext('2d');
-            const incomeCategories = {{ income_by_category|safe }};  <!-- Fixed from 'income_by_context' to match views.py -->
-            const incomeLabels = incomeCategories.map(item => item.category);
-            const incomeData = incomeCategories.map(item => item.total || 0);
+            const incomeCategories = {{ income_by_category|safe }};
+            const incomeLabels = incomeCategories.map(item => item.category) || [];
+            const incomeData = incomeCategories.map(item => item.total || 0) || [];
 
-            new Chart(ctxIncomePie, {
+            new Chart(document.getElementById('incomePieChart').getContext('2d'), {
                 type: 'pie',
                 data: {
                     labels: incomeLabels,
                     datasets: [{
                         data: incomeData,
                         backgroundColor: [
-                            'rgba(75, 192, 192, 0.5)',
-                            'rgba(54, 162, 235, 0.5)',
-                            'rgba(255, 206, 86, 0.5)',
-                            'rgba(255, 159, 64, 0.5)',
-                            'rgba(153, 102, 255, 0.5)'
+                            'rgba(75, 192, 192, 0.5)', 'rgba(54, 162, 235, 0.5)', 'rgba(255, 206, 86, 0.5)',
+                            'rgba(255, 159, 64, 0.5)', 'rgba(153, 102, 255, 0.5)'
                         ]
                     }]
                 },
-                options: {
-                    plugins: {
-                        title: {
-                            display: true,
-                            text: 'Income by Category'
-                        }
-                    }
-                }
+                options: { plugins: { title: { display: true, text: 'Income by Category' } } }
             });
 
             // Expenses by Category Pie Chart
-            const ctxExpensesPie = document.getElementById('expensesPieChart').getContext('2d');
             const expensesCategories = {{ expenses_by_category|safe }};
-            const expensesLabels = expensesCategories.map(item => item.category);
-            const expensesData = expensesCategories.map(item => item.total || 0);
+            const expensesLabels = expensesCategories.map(item => item.category) || [];
+            const expensesData = expensesCategories.map(item => item.total || 0) || [];
 
-            new Chart(ctxExpensesPie, {
+            new Chart(document.getElementById('expensesPieChart').getContext('2d'), {
                 type: 'pie',
                 data: {
                     labels: expensesLabels,
                     datasets: [{
                         data: expensesData,
                         backgroundColor: [
-                            'rgba(255, 99, 132, 0.5)',
-                            'rgba(54, 162, 235, 0.5)',
-                            'rgba(255, 206, 86, 0.5)',
-                            'rgba(75, 192, 192, 0.5)',
-                            'rgba(153, 102, 255, 0.5)'
+                            'rgba(255, 99, 132, 0.5)', 'rgba(54, 162, 235, 0.5)', 'rgba(255, 206, 86, 0.5)',
+                            'rgba(75, 192, 192, 0.5)', 'rgba(153, 102, 255, 0.5)'
                         ]
                     }]
                 },
-                options: {
-                    plugins: {
-                        title: {
-                            display: true,
-                            text: 'Expenses by Category'
-                        }
-                    }
-                }
+                options: { plugins: { title: { display: true, text: 'Expenses by Category' } } }
             });
         });
     </script>
