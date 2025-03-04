@@ -16,13 +16,13 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from transactions.views import RegisterView
+from transactions import views  # Import views from transactions
 
 urlpatterns = [
-    path('', include('transactions.urls')),  # Redirect root to transactions.urls (landing_page)
+    path('', views.landing_page, name='landing_page'),  # Map root to landing_page directly
+    path('transactions/', include('transactions.urls')),  # Include transactions app URLs under /transactions/
     path('accounts/', include('django.contrib.auth.urls')),  # Authentication URLs
-    path('register/', RegisterView.as_view(), name='register'),  # Registration route
+    path('register/', views.RegisterView.as_view(), name='register'),  # Registration route
     path('admin/', admin.site.urls),
-    # Password reset URLs
     path('password_reset/', include('django.contrib.auth.urls')),  # Uses default password reset views
 ]
