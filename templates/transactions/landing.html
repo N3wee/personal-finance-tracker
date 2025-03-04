@@ -42,25 +42,6 @@
                 </div>
             </div>
 
-            <!-- Charts Section -->
-            <div class="mt-5">
-                <h3 class="mb-3">Financial Visualizations</h3>
-                <div class="row g-4">
-                    <div class="col-md-6">
-                        <h4>Income by Category</h4>
-                        <canvas id="incomePieChart" class="w-100"></canvas>
-                    </div>
-                    <div class="col-md-6">
-                        <h4>Expenses by Category</h4>
-                        <canvas id="expensesPieChart" class="w-100"></canvas>
-                    </div>
-                </div>
-                <div class="mt-4">
-                    <h4>Monthly Income and Expenses (Last 6 Months)</h4>
-                    <canvas id="monthlyChart" class="w-100"></canvas>
-                </div>
-            </div>
-
             <!-- Reports Section -->
             <div class="mt-5">
                 <h3 class="mb-3">Recent Activity</h3>
@@ -109,99 +90,5 @@
             {% endif %}
         </div>
     </div>
-
-    <!-- Chart.js Script -->
-    <script src="{% static 'js/chart.umd.js' %}" defer></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Monthly Income and Expenses Bar Chart
-            const monthlyIncome = {{ monthly_income|safe }};
-            const monthlyExpenses = {{ monthly_expenses|safe }};
-
-            const monthlyLabels = monthlyIncome.map(item => new Date(0, item.date__month - 1).toLocaleString('default', { month: 'long' })) || [];
-            const incomeData = monthlyIncome.map(item => item.total || 0) || [];  // Ensure unique declaration
-            const expensesData = monthlyExpenses.map(item => item.total || 0) || [];
-
-            new Chart(document.getElementById('monthlyChart').getContext('2d'), {
-                type: 'bar',
-                data: {
-                    labels: monthlyLabels,
-                    datasets: [{
-                        label: 'Income',
-                        data: incomeData,
-                        backgroundColor: 'rgba(75, 192, 192, 0.5)',
-                        borderColor: 'rgba(75, 192, 192, 1)',
-                        borderWidth: 1
-                    }, {
-                        label: 'Expenses',
-                        data: expensesData,
-                        backgroundColor: 'rgba(255, 99, 132, 0.5)',
-                        borderColor: 'rgba(255, 99, 132, 1)',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            title: {
-                                display: true,
-                                text: 'Amount ($)'
-                            }
-                        },
-                        x: {
-                            title: {
-                                display: true,
-                                text: 'Month'
-                            }
-                        }
-                    },
-                    plugins: {
-                        legend: { position: 'top' },
-                        title: { display: true, text: 'Monthly Income and Expenses' }
-                    }
-                }
-            });
-
-            // Income by Category Pie Chart
-            const incomeCategories = {{ income_by_category|safe }};
-            const incomeLabels = incomeCategories.map(item => item.category) || [];
-            const incomeData = incomeCategories.map(item => item.total || 0) || [];  // Ensure unique declaration
-
-            new Chart(document.getElementById('incomePieChart').getContext('2d'), {
-                type: 'pie',
-                data: {
-                    labels: incomeLabels,
-                    datasets: [{
-                        data: incomeData,
-                        backgroundColor: [
-                            'rgba(75, 192, 192, 0.5)', 'rgba(54, 162, 235, 0.5)', 'rgba(255, 206, 86, 0.5)',
-                            'rgba(255, 159, 64, 0.5)', 'rgba(153, 102, 255, 0.5)'
-                        ]
-                    }]
-                },
-                options: { plugins: { title: { display: true, text: 'Income by Category' } } }
-            });
-
-            // Expenses by Category Pie Chart
-            const expensesCategories = {{ expenses_by_category|safe }};
-            const expensesLabels = expensesCategories.map(item => item.category) || [];
-            const expensesData = expensesCategories.map(item => item.total || 0) || [];
-
-            new Chart(document.getElementById('expensesPieChart').getContext('2d'), {
-                type: 'pie',
-                data: {
-                    labels: expensesLabels,
-                    datasets: [{
-                        data: expensesData,
-                        backgroundColor: [
-                            'rgba(255, 99, 132, 0.5)', 'rgba(54, 162, 235, 0.5)', 'rgba(255, 206, 86, 0.5)',
-                            'rgba(75, 192, 192, 0.5)', 'rgba(153, 102, 255, 0.5)'
-                        ]
-                    }]
-                },
-                options: { plugins: { title: { display: true, text: 'Expenses by Category' } } }
-            });
-        });
-    </script>
+</div>
 {% endblock %}
