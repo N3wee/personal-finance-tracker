@@ -1,12 +1,13 @@
-from django.db import models
-from django.utils import timezone
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
+from django.db import models
+from django.utils import timezone
+
 
 class Transaction(models.Model):
     TRANSACTION_TYPES = [
-        ('Income', 'Income'),
-        ('Expense', 'Expense'),
+        ("Income", "Income"),
+        ("Expense", "Expense"),
     ]
 
     PAYMENT_METHODS = [
@@ -23,7 +24,9 @@ class Transaction(models.Model):
     date = models.DateField(default=timezone.now)
     notes = models.TextField(blank=True, null=True)
     recurring = models.BooleanField(default=False)
-    payment_method = models.CharField(max_length=50, choices=PAYMENT_METHODS, default="cash")
+    payment_method = models.CharField(
+        max_length=50, choices=PAYMENT_METHODS, default="cash"
+    )
 
     def clean(self):
         if self.amount is None or self.amount <= 0:  # Fixed syntax here
@@ -35,6 +38,7 @@ class Transaction(models.Model):
 
     def __str__(self):
         return f"{self.title} - {self.amount} ({self.transaction_type})"
+
 
 class Budget(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)

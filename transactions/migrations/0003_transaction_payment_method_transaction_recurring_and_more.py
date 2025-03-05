@@ -5,25 +5,32 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('transactions', '0002_alter_transaction_date'),
+        ("transactions", "0002_alter_transaction_date"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='transaction',
-            name='payment_method',
-            field=models.CharField(choices=[('cash', 'Cash'), ('card', 'Card'), ('bank_transfer', 'Bank Transfer')], default='cash', max_length=50),
+            model_name="transaction",
+            name="payment_method",
+            field=models.CharField(
+                choices=[
+                    ("cash", "Cash"),
+                    ("card", "Card"),
+                    ("bank_transfer", "Bank Transfer"),
+                ],
+                default="cash",
+                max_length=50,
+            ),
         ),
         migrations.AddField(
-            model_name='transaction',
-            name='recurring',
+            model_name="transaction",
+            name="recurring",
             field=models.BooleanField(default=False),
         ),
         migrations.AlterField(
-            model_name='transaction',
-            name='date',
+            model_name="transaction",
+            name="date",
             field=models.DateField(default=django.utils.timezone.now),
         ),
     ]

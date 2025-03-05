@@ -14,15 +14,22 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import include, path
+
 from transactions import views  # Import views from transactions
 
 urlpatterns = [
-    path('', views.landing_page, name='landing_page'),  # Map root to landing_page directly
-    path('transactions/', include('transactions.urls')),  # Include transactions app URLs under /transactions/
-    path('accounts/', include('django.contrib.auth.urls')),  # Authentication URLs
-    path('register/', views.RegisterView.as_view(), name='register'),  # Registration route
-    path('admin/', admin.site.urls),
-    path('password_reset/', include('django.contrib.auth.urls')),  # Uses default password reset views
+    # Map root to landing_page directly
+    path("", views.landing_page, name="landing_page"),
+    # Include transactions app URLs under /transactions/
+    path("transactions/", include("transactions.urls")),
+    path("accounts/", include("django.contrib.auth.urls")),
+    # Authentication URLs
+    path("register/", views.RegisterView.as_view(), name="register"),
+    # Registration route
+    path("admin/", admin.site.urls),
+    # Uses default password reset views
+    path("password_reset/", include("django.contrib.auth.urls")),
 ]
