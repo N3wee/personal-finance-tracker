@@ -10,10 +10,10 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
-import dj_database_url
 import os
 from pathlib import Path
 
+import dj_database_url
 from dotenv import load_dotenv
 
 load_dotenv()  # Load .env file for environment variables
@@ -21,17 +21,14 @@ load_dotenv()  # Load .env file for environment variables
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
+SECRET_KEY = os.getenv("SECRET_KEY")
+if not SECRET_KEY:
+    raise ValueError("SECRET_KEY not found. Set it in a .env file or environment variable.")
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv(
-    "SECRET_KEY", "django-insecure-7hgjjg-=i!&j75l8v^f-rpr$bs6(z2r-_ozv1&3ldf)anp^@^^"
-)
 
 # SECURITY WARNING: don't run with debug turned on in production!
 # True for local, False for Heroku
-DEBUG = os.getenv("DEBUG", "True").lower() == "true"
+DEBUG = os.getenv("DEBUG", "False").lower() == "true"
 
 ALLOWED_HOSTS = [".herokuapp.com", "127.0.0.1", "localhost"]  # Add Heroku hostname
 
@@ -145,9 +142,7 @@ STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")  # For Heroku collectstatic
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "static"),  # For local static files
 ]
-STATICFILES_STORAGE = (
-    "whitenoise.storage.CompressedManifestStaticFilesStorage"  # For Heroku
-)
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"  # For Heroku
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
