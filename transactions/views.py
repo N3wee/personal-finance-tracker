@@ -16,13 +16,9 @@ from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Table, TableStyle
-from django.http import HttpResponseForbidden
 
-from .forms import (
-    BudgetForm,
-    CustomUserEditForm,  # Import the new form
-    TransactionForm,
-)
+from .forms import CustomUserEditForm  # Import the new form
+from .forms import BudgetForm, TransactionForm
 from .models import Budget, Transaction
 
 # Configure logging
@@ -611,9 +607,8 @@ def login_redirect_if_authenticated(view_func):
 def download_report(request):
     """Generate and download a PDF report of the user's financial data.
 
-    Includes financial summary, transactions, and budgets for the 
+    Includes financial summary, transactions, and budgets for the
     authenticated user.
-
     Args:
         request: The HTTP request object.
 
