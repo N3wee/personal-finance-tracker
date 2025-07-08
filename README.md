@@ -1,214 +1,391 @@
-Personal Finance Tracker
-------------------------
+# Personal Finance Tracker
 
-### Overview
+The Personal Finance Tracker is a full-stack web application built with Django that allows users to manage their personal finances in a structured and secure environment. Authenticated users can track income and expenses, set budgets, and generate downloadable financial summaries.
 
-The Personal Finance Tracker is a Django-based web application designed to help users manage their financial transactions and budgets. It provides features for tracking income and expenses, setting budgets, generating financial reports, and ensuring secure user authentication and authorization. This project was developed as part of a Full Stack Development course, utilizing Python, Django, HTML, CSS, and JavaScript, with a focus on robust testing, deployment, and Agile methodologies.
+The application is designed with simplicity and functionality in mind. It supports user authentication, enforces ownership-based access to financial data, and includes PDF export functionality for records. This project was developed as part of a portfolio submission to demonstrate practical Django development skills and adherence to secure coding practices.
 
-### Features
+## Key Features
 
-*   **Transaction Management**: Add, edit, delete, and list transactions (income and expenses) with filtering and sorting options, including motivational quotes.
-    
-*   **Budget Management**: Create, edit, delete, and view budgets for different categories.
-    
-*   **Financial Dashboard**: A landing page displaying financial summaries, recent transactions, budgets, and a downloadable PDF report.
-    
-*   **User Authentication**: Secure login, registration, profile editing, and logout with role-based access (regular users and superusers/admin).
-    
-*   **Responsive Design**: Utilizes Bootstrap for a responsive and user-friendly interface.
-    
+- **User Authentication**
+  - Secure registration, login, and logout functionality using Django’s built-in authentication system.
+  - Passwords are hashed and protected using Django’s security framework.
 
-### Technologies Used
+- **Transaction Management**
+  - Add, edit, and delete income and expense entries.
+  - Transactions are categorized by type, date, amount, and payment method.
+  - Data is scoped per user—users can only access and modify their own financial records.
 
-*   **Backend**: Python 3.10, Django 4.2
-    
-*   **Frontend**: HTML, CSS (Bootstrap 5), JavaScript
-    
-*   **Database**: SQLite (for development), PostgreSQL (for production via Heroku)
-    
-*   **Tools**: Git, GitHub, Heroku, VS Code
-    
-*   **Testing**: Django’s unittest framework, flake8 for linting, pycodestyle for style checking
-    
-*   **Dependencies**: whitenoise, reportlab for PDF generation, requests for API calls, widget-tweaks for form rendering
-    
+- **Budget Planning**
+  - Users can define budget categories with allocated amounts.
+  - Budget entries can be created, edited, and deleted securely.
 
-### Original Custom Models
+- **PDF Export**
+  - Users can download their transactions as a formatted PDF summary for offline record-keeping.
 
-This project includes at least one original custom model, Transaction, which tracks financial transactions with fields for title, amount, type (Income/Expense), category, date, and payment method. Additionally, the Budget model, created for this project, manages user budgets with fields for category, amount, start date, and end date. These models are markedly different from those in the To-Do app or Codestar Blog walkthrough projects, providing unique functionality for financial tracking and management, including CRUD operations accessible through the front end.
+- **Responsive UI**
+  - Clean and mobile-friendly user interface using HTML5, CSS3, and Bootstrap.
+  - Custom templates and form rendering using `django-widget-tweaks`.
 
-### Agile Methodology
+- **Security & Permissions**
+  - Ownership checks to prevent unauthorized access to financial records.
+  - Only authenticated users can interact with the app's core features.
+  - Proper use of HTTP response codes for unauthorized attempts (e.g., HTTP 403).
 
-*   Development followed Agile methodologies using a GitHub Project board to track tasks, bugs, and milestones, organized into To Do, In Progress, and Done columns. Each task is linked to specific user stories, ensuring comprehensive coverage of project requirements. The GitHub Project board is set to public visibility for assessment purposes.
-    
+- **Testing**
+  - Includes automated unit tests for critical views and permission logic.
+  - Manual testing was conducted for form validation, CRUD operations, and login/logout workflows.
 
-### User Stories and Functionality
+- **Heroku Deployment**
+  - Fully deployed and accessible via Heroku with persistent PostgreSQL storage.
+  - Environment-specific settings handled using `.env` and `django-environ`.
 
-Below are user stories and descriptions of key pages, with corresponding screenshots linked for reference. These illustrate how the application meets user needs and provides front-end CRUD functionality without requiring admin panel access.
+## Technologies Used
 
-#### 1\. User Story: "As a user, I want to log in to track my finances securely."
+### Frameworks & Libraries
+- **[Django 5.1.6](https://www.djangoproject.com/)** – High-level Python web framework for rapid development.
+- **[Bootstrap 5](https://getbootstrap.com/)** – Responsive frontend framework for styling and layout.
+- **[dj-database-url](https://github.com/jacobian/dj-database-url)** – Simplified database configuration for deployment.
+- **[python-dotenv](https://pypi.org/project/python-dotenv/)** – Loads environment variables from a `.env` file.
+- **[whitenoise](https://whitenoise.evans.io/)** – Serves static files efficiently in production.
+- **[django-widget-tweaks](https://pypi.org/project/django-widget-tweaks/)** – Allows flexible customization of form fields in templates.
 
-*   **Functionality**: The login page allows users to authenticate with a username and password, redirecting them to the dashboard upon success. Unauthenticated users are redirected appropriately.
-    
-*   **Screenshot**: [Login Page](assets/login_page.png)
-    
-
-#### 2\. User Story: "As a user, I want to manage my transaction history to monitor my income and expenses."
-
-*   **Functionality**: The transactions page lists all user transactions, allows filtering by type, category, and date, and provides options to add, edit, or delete transactions via front-end forms and UI elements (e.g., buttons). A motivational quote enhances user engagement.
-    
-*   **Screenshot**: [Transactions Page](assets/transactions_page.png)
-    
-
-#### 3\. User Story: "As a user, I want to set and manage budgets to plan my finances effectively."
-
-*   **Functionality**: The budgets page enables users to create, edit, delete, and view budgets, with a table displaying category, amount, start date, and end date. Front-end forms and buttons provide CRUD functionality for budget management.
-    
-*   **Screenshot**: [Budgets Page](assets/budget_page.png)
-    
-
-#### 4\. User Story: "As a user, I want to view a financial dashboard to understand my financial status."
-
-*   **Functionality**: The landing page displays total income, expenses, net balance, total budgets, and recent activity (transactions and budgets). Users can navigate to detailed views or download a PDF report summarizing their financial data.
-    
-*   **Screenshot**: [Dashboard Page](assets/landing_page.png)
-    
-
-#### 5\. User Story: "As a user, I want to edit my profile to update my details."
-
-*   **Functionality**: The edit profile page allows authenticated users to modify their username and email, ensuring secure profile management through a front-end form.
-    
-*   **Screenshot**: [Edit Profile Page](assets/edit_profile_page.png)
-    
-
-#### 6\. User Story: "As a user, I want to generate a financial report to review my data."
-
-*   **Functionality**: The downloadable PDF report, accessible from the dashboard, summarizes transactions, budgets, and financial metrics in a formatted document.
-    
-*   **Screenshot**: [PDF Report](assets/pdf_report.png)
-    
-
-### Installation
-
-#### Prerequisites
-
-*   Python 3.10 or higher
-    
-*   Pip (Python package manager)
-    
-*   Git
-    
-*   Virtualenv (optional but recommended)
-    
-
-#### Steps
-
-1.  **Clone the Repository**:bashCollapseWrapCopygit clone https://github.com/your-username/personal-finance-tracker.gitcd personal-finance-tracker
-    
-2.  **Set Up a Virtual Environment**:bashCollapseWrapCopypython -m venv venvvenv\\Scripts\\activate _\# On Windows_source venv/bin/activate _\# On macOS/Linux_
-    
-3.  **Install Dependencies**:bashCollapseWrapCopypip install -r requirements.txt
-    
-4.  **Configure Settings**:
-    
-    *   Copy finance\_tracker/settings.py and update:
-        
-        *   DEBUG = True (for development, set to False for production).
-            
-        *   Update ALLOWED\_HOSTS (e.g., \['localhost', '127.0.0.1'\] for local, or your Heroku domain for production).
-            
-        *   Configure database settings in DATABASES (SQLite for local, PostgreSQL for Heroku).
-            
-5.  **Apply Migrations**:bashCollapseWrapCopypython manage.py migrate
-    
-6.  **Create a Superuser** (optional, for admin access):bashCollapseWrapCopypython manage.py createsuperuser
-    
-7.  **Run the Development Server**:bashCollapseWrapCopypython manage.py runserver
-    
-    *   Access the application at http://127.0.0.1:8000/.
-        
-
-### Usage
-
-*   **Register/Login**: Use the login or registration pages to access the application securely.
-    
-*   **Manage Transactions and Budgets**: Navigate to the respective pages to perform CRUD operations via front-end forms and UI elements.
-    
-*   **View Dashboard**: Access the financial dashboard to monitor your financial status and download reports.
-    
-*   **Edit Profile**: Update your user details through the profile page.
-    
-*   **Admin Access**: Log in as a superuser to manage users and data via the Django admin interface (/admin).
-    
+### Database
+- **[PostgreSQL](https://www.postgresql.org/)** – Relational database used in both local and Heroku environments.
 
 ### Deployment
+- **[Heroku](https://www.heroku.com/)** – Cloud platform used for hosting the live application.
 
-*   **Heroku Deployment**:
-    
-    1.  Install the Heroku CLI and log in:bashCollapseWrapCopyheroku login
-        
-    2.  Create a Heroku app:bashCollapseWrapCopyheroku create n3-fintrack
-        
-    3.  Set environment variables in Heroku:bashCollapseWrapCopyheroku config:set SECRET\_KEY=your-secret-keyheroku config:set DEBUG=False
-        
-    4.  Push to Heroku:bashCollapseWrapCopygit push heroku main
-        
-    5.  Open the app:bashCollapseWrapCopyheroku open
-        
+### Tools
+- **[Git](https://git-scm.com/)** – Version control.
+- **[GitHub](https://github.com/)** – Code hosting and collaboration.
+- **[Flake8](https://flake8.pycqa.org/)** – Enforces Python style guide compliance.
+- **[pytest](https://docs.pytest.org/)** – Framework for writing and running tests.
 
-### Testing
+## Installation & Setup
 
-*   **Unit Tests**: The project includes unit tests using Django’s unittest framework, covering models, forms, views, and key functionality for transactions and budgets. A total of 31 tests are implemented, verifying authentication, authorization, and data integrity.
-    
-*   **Current Status**: As of March 4, 2025, four tests are failing due to unauthorized users receiving 302 redirects instead of the expected 403 Forbidden responses for editing and deleting transactions and budgets. These issues are noted for future resolution but remain unresolved due to time constraints. Other tests pass successfully, ensuring partial coverage of the application’s functionality.
-    
-*   **Code Quality Checks**: The codebase has been validated using standard Python tools to ensure adherence to coding standards, with adjustments made to address style and linting issues.
-    
+Follow the steps below to run the project locally on your machine:
 
-### Code Quality
+### 1. Clone the Repository
+```bash
+git clone https://github.com/N3wee/personal-finance-tracker.git
+cd personal-finance-tracker
+```
 
-*   The codebase has been reviewed to remove unnecessary comments and ensure compliance with Python coding standards. Docstrings have been added or updated in key files (e.g., transactions/views.py, transactions/models.py, transactions/forms.py) to improve documentation, following best practices. Other files, such as configuration and migration scripts, maintain minimal documentation as appropriate.
-    
+### 2. Set Up Virtual Environment
+Create and activate a virtual environment:
 
-### Bugs
+```bash
+python -m venv venv
+# Windows
+venv\Scripts\activate
+# macOS/Linux
+source venv/bin/activate
+```
 
-#### Solved Bugs
+### 3. Install Dependencies
+```bash
+pip install -r requirements.txt
+```
 
-*   Addressed issues with URL redirection mismatches and test failures related to authentication in transactions/tests.py, ensuring tests align with application behavior.
-    
-*   Resolved linting warnings (e.g., unused imports, unused variables, and indentation issues) using automated tools and manual edits.
-    
+### 4. Configure Environment Variables
+Create a `.env` file in the root directory and add the following:
 
-#### Known Issues
+```ini
+SECRET_KEY=your-django-secret-key
+DEBUG=True
+```
 
-*   Four tests (test\_edit\_transaction\_non\_owner, test\_delete\_transaction\_non\_owner, test\_edit\_budget\_non\_owner, test\_delete\_budget\_non\_owner) fail because non-owners are redirected (302) instead of receiving a 403 Forbidden response. This requires updates to the authorization logic in transactions/views.py, but these changes are pending due to time constraints.
-    
+You can generate a new secret key using:
 
-### Project Board
+```bash
+python -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())'
+```
 
-*   The project board on GitHub tracks tasks, bugs, and milestones, organized into To Do, In Progress, and Done columns, following Agile methodologies. Each task is linked to specific user stories, ensuring comprehensive coverage. The board is set to public visibility for assessment. Screenshots are included \[insert screenshot placeholder here\].
-    
+### 5. Set Up the Database
+Ensure PostgreSQL is running and then apply migrations:
 
-### Screenshots
+```bash
+python manage.py makemigrations
+python manage.py migrate
+```
 
-*   [Login Page](assets/login_page.png): Shows the login interface for user authentication.
-    
-*   [Transactions Page](assets/transactions_page.png): Displays the transaction list with filtering options and CRUD functionality.
-    
-*   [Budgets Page](assets/budget_page.png): Illustrates the budget management interface with CRUD operations.
-    
-*   [Landing Page](assets/landing_page.png): Presents the financial dashboard with summaries and report download options.
-    
-*   [Edit Profile Page](assets/edit_profile_page.png): Shows the user profile editing form.
-    
-*   [PDF Report](assets/pdf_report.png): Displays the generated financial report in PDF format.
-    
+### 6. Create Superuser (Optional)
+```bash
+python manage.py createsuperuser
+```
 
-### Contributors
+### 7. Run the Development Server
+```bash
+python manage.py runserver
+```
 
-*   Nathan Sweeney 
-    
+Then visit http://127.0.0.1:8000/ in your browser.
 
-### Acknowledgments
+## Features
 
-*   Thanks to course instructors and open-source communities for guidance and resources, including Django documentation and libraries such as reportlab and widget-tweaks.
+This Personal Finance Tracker provides users with a streamlined way to manage their income, expenses, and budgets. The key features include:
+
+### ✅ Authentication
+- Secure user registration and login system
+- Login required for accessing and managing personal financial data
+![Authentication - wireframe-login.png](assets/wireframe-login.png)
+![Authentication - login_page.png](assets/login_page.png)
+
+### ✅ Transactions Management
+- Add income or expense transactions with details like category, date, amount, and payment method
+- Edit or delete existing transactions
+- Transactions are displayed in a chronological list
+![Transactions - wireframe-transactions.png](assets/wireframe-transactions.png)
+![Transactions - transaction_page.png](assets/transaction_page.png)
+
+### ✅ Budgeting
+- Create budgets for specific categories and date ranges
+- View and manage multiple budgets
+- Prevent unauthorized access or editing of budgets by other users
+![Budgeting - budget_page.png](assets/budget_page.png)
+
+### ✅ PDF Export
+- Generate and download PDF reports of transactions for offline records or printing
+![PDF Export - pdf_report.png](assets/pdf_report.png)
+
+### ✅ Responsive User Interface
+- Clean, user-friendly interface built with HTML/CSS and Django templating
+- Mobile-responsive layout for easy access across devices
+![UI - landing_page.png](assets/landing_page.png)
+![UI - edit_profile_page.png](assets/edit_profile_page.png)
+
+### ✅ Error Handling & Logging
+- Graceful error handling with appropriate permission checks
+- Logging for permission errors and failed form submissions
+
+### ✅ Security Best Practices
+- Secret key and environment variables handled through `.env` file
+- DEBUG mode disabled in production
+
+## 6. Testing & Code Quality
+
+### ✅ Automated Tests
+
+The project includes a suite of unit tests to verify core functionality and permission enforcement:
+
+- **Transactions**: Create, edit, delete, and access control
+- **Budgets**: Create, edit, delete, and access control
+- **Authentication**: Access to protected routes is restricted to logged-in users
+
+Run all tests using:
+
+```bash
+python manage.py test
+```
+
+These tests are essential to ensure that users can only modify their own data, and that the application behaves as expected.
+
+---
+
+### ✅ Code Linting
+
+The codebase follows Python best practices and is linted using:
+
+- **flake8** – For general style guide enforcement (PEP8)
+- **isort** – For automatic sorting of imports
+- **black** – For code formatting consistency
+
+To check the code style manually:
+
+```bash
+flake8 --max-line-length=120 --exclude=venv
+```
+
+Linting helps maintain a clean, readable, and professional codebase.
+
+---
+
+### ✅ Environment Separation
+
+Environment variables such as `SECRET_KEY` and `DEBUG` are loaded via a `.env` file and never hardcoded in the codebase. This prevents sensitive data from being exposed.
+
+---
+
+### ✅ Git Best Practices
+
+- Pre-commit hooks (optional) were used during development to auto-check for formatting issues and common errors.
+- `.gitignore` prevents committing virtual environments, environment files, and other unnecessary artifacts.
+
+## Deployment
+
+This project is deployed on [Heroku](https://www.heroku.com/) using the **Heroku Python Buildpack**. Below are the deployment steps and configurations used.
+
+### ⚙️ Deployment Steps
+
+1. **Create a Heroku App**
+   ```bash
+   heroku create your-app-name
+   ```
+
+2. **Add Heroku Remote (if not already added)**
+   ```bash
+   heroku git:remote -a your-app-name
+   ```
+
+3. **Set Config Vars**
+   Go to your Heroku Dashboard > Settings > Reveal Config Vars, and add:
+
+   - `SECRET_KEY`: Your Django secret key
+   - `DEBUG`: `False`
+   - `ALLOWED_HOSTS`: your Heroku app URL (e.g. `your-app-name.herokuapp.com`)
+   - Any other variables from your `.env` file
+
+4. **Install Heroku CLI (if not installed)**  
+   [Heroku CLI Download](https://devcenter.heroku.com/articles/heroku-cli)
+
+5. **Push to Heroku**
+   ```bash
+   git push heroku main
+   ```
+
+6. **Run Database Migrations on Heroku**
+   ```bash
+   heroku run python manage.py migrate
+   ```
+
+7. **Create a Superuser (Optional)**
+   ```bash
+   heroku run python manage.py createsuperuser
+   ```
+
+8. **Open the Live App**
+   ```bash
+   heroku open
+   ```
+
+### 📁 Procfile
+
+Ensure your project contains a `Procfile` with the following content:
+```procfile
+web: gunicorn finance_tracker.wsgi
+```
+
+### 📂 Static Files
+
+The project uses **Whitenoise** for serving static files in production. Make sure you’ve run:
+```bash
+python manage.py collectstatic
+```
+
+## Testing
+
+Thorough testing was conducted to ensure application reliability and security, particularly around user permissions and data ownership. The following test strategies and tools were used:
+
+### 1. Django Unit Tests
+
+The project includes a comprehensive suite of unit tests for key views and functionality.
+
+To run tests locally:
+
+```bash
+python manage.py test
+```
+
+#### Key Areas Tested:
+- **Transaction Tests:**
+  - Authenticated vs unauthenticated access to transaction views
+  - Owner vs non-owner access when editing and deleting transactions
+- **Budget Tests:**
+  - Authenticated creation of budgets
+  - Permission-based editing and deletion of budgets
+- **Access Control:**
+  - Non-owners attempting to access protected data return proper `403 Forbidden` responses
+  - Unauthorized users are redirected to login when required
+
+### 2. Code Style Checks
+
+To ensure code quality and readability, the following tools were used:
+
+- **flake8**: For enforcing PEP8 standards and flagging syntax issues
+- **black**: Auto-formatting code for consistency (locally run)
+- **isort**: Ensures consistent import order (optional)
+
+You can run `flake8` like this:
+
+```bash
+flake8 --max-line-length=120 --exclude=venv
+```
+
+No blocking lint errors were present in the final submitted version.
+
+### 3. Manual Testing
+
+Additional manual tests were performed, including:
+
+- Form submissions with invalid data
+- Login/logout functionality
+- Permissions testing via multiple user accounts
+- Application behaviour with and without authentication
+
+### 4. Heroku Production Testing
+
+The app was deployed to Heroku and tested to ensure:
+
+- Environment variables are respected
+- `DEBUG` is disabled in production
+- `SECRET_KEY` is kept out of source code
+- The production database is properly connected
+
+> ✅ All tests passed and the deployed version functions as expected.
+
+
+### 📚 Credits / Acknowledgements
+
+This project was developed as part of a Django portfolio submission for educational purposes. The following resources and tools were instrumental in its development:
+
+- [Django Documentation](https://docs.djangoproject.com/) – for framework guidance and best practices.
+- [Bootstrap Documentation](https://getbootstrap.com/) – for responsive frontend components.
+- [Heroku Documentation](https://devcenter.heroku.com/) – for deployment help and environment configuration.
+- [Real Python Tutorials](https://realpython.com/tutorials/django/) – for inspiration and reference on Django patterns.
+- [GitHub Copilot & ChatGPT](https://openai.com/chatgpt) – for development assistance and troubleshooting during coding and testing.
+- Stack Overflow and Django Discord – for community support.
+
+If any external code or references were adapted in the project, they were modified appropriately and acknowledged where used.
+
+
+## 2. Possible Future Improvements
+
+While the current version of the Personal Finance Tracker meets its core objectives, there are several enhancements and new features that could be explored in future iterations:
+
+- **Recurring Transactions**  
+  Add support for recurring income or expense entries (e.g., monthly rent, salary).
+
+- **Data Visualization**  
+  Integrate simple charts or graphs to visualize spending trends over time using libraries like Chart.js or D3.js.
+
+- **Multi-Currency Support**  
+  Enable users to manage transactions in different currencies with real-time exchange rate integration.
+
+- **Tagging System**  
+  Allow users to tag transactions (e.g., "holiday", "business") for better filtering and analysis.
+
+- **Enhanced Budget Alerts**  
+  Notify users when their spending nears or exceeds budget thresholds via email or in-app alerts.
+
+- **Search & Filters**  
+  Add dynamic filtering and search functionality for easier transaction lookup.
+
+- **Two-Factor Authentication**  
+  Improve account security with optional two-factor authentication (2FA) during login.
+
+These improvements could significantly enhance user experience, accessibility, and functionality.
+
+
+## 3. License
+
+This project is intended for **educational purposes only** and does not carry a formal software license.  
+It was developed as part of a portfolio submission to demonstrate Django development proficiency.
+
+---
+
+## 4. Contact / Author Info
+
+**Author**: Nathan Sweeney  
+**GitHub**: [github.com/N3wee](https://github.com/N3wee)  
+
+For any questions regarding this project, feel free to reach out via GitHub or email.
