@@ -4,40 +4,18 @@ The Personal Finance Tracker is a full-stack web application built with Django t
 
 The application is designed with simplicity and functionality in mind. It supports user authentication, enforces ownership-based access to financial data, and includes PDF export functionality for records. This project was developed as part of a portfolio submission to demonstrate practical Django development skills and adherence to secure coding practices.
 
-## Key Features
 
-- **User Authentication**
-  - Secure registration, login, and logout functionality using Django’s built-in authentication system.
-  - Passwords are hashed and protected using Django’s security framework.
+## Agile Development Process
 
-- **Transaction Management**
-  - Add, edit, and delete income and expense entries.
-  - Transactions are categorized by type, date, amount, and payment method.
-  - Data is scoped per user—users can only access and modify their own financial records.
+This project followed an Agile approach using GitHub Projects for sprint and task management. All user stories were converted into GitHub Issues, prioritized, and tracked on a Kanban-style project board.
 
-- **Budget Planning**
-  - Users can define budget categories with allocated amounts.
-  - Budget entries can be created, edited, and deleted securely.
+- **GitHub Project Board**: [View Board](https://github.com/N3wee/personal-finance-tracker/projects/1)
+- Each **issue** represents a user story or technical task with clear acceptance criteria.
+- Issues were assigned to categories like `To Do`, `In Progress`, and `Done`.
+- Milestones were used to plan development phases, and progress was reviewed frequently.
 
-- **PDF Export**
-  - Users can download their transactions as a formatted PDF summary for offline record-keeping.
-
-- **Responsive UI**
-  - Clean and mobile-friendly user interface using HTML5, CSS3, and Bootstrap.
-  - Custom templates and form rendering using `django-widget-tweaks`.
-
-- **Security & Permissions**
-  - Ownership checks to prevent unauthorized access to financial records.
-  - Only authenticated users can interact with the app's core features.
-  - Proper use of HTTP response codes for unauthorized attempts (e.g., HTTP 403).
-
-- **Testing**
-  - Includes automated unit tests for critical views and permission logic.
-  - Manual testing was conducted for form validation, CRUD operations, and login/logout workflows.
-
-- **Heroku Deployment**
-  - Fully deployed and accessible via Heroku with persistent PostgreSQL storage.
-  - Environment-specific settings handled using `.env` and `django-environ`.
+![Kanban Board Overview](assets/agile-kanban-board.png)
+*A screenshot of the GitHub Project board showing To Do, In Progress, and Done columns
 
 ## Technologies Used
 
@@ -162,15 +140,110 @@ This Personal Finance Tracker provides users with a streamlined way to manage th
 - Secret key and environment variables handled through `.env` file
 - DEBUG mode disabled in production
 
-## 6. Testing & Code Quality
+## Design Considerations
 
-### ✅ Automated Tests
+The design of the Personal Finance Tracker prioritizes simplicity, clarity, and ease of use. The following principles guided the UI/UX decisions:
 
-The project includes a suite of unit tests to verify core functionality and permission enforcement:
+- **Color Scheme**: 
+  - Green is used to indicate positive financial actions (e.g., income).
+  - Red/orange shades represent expenses or warnings (e.g., overspending).
+  - Neutral grays and blues are used to keep the interface clean and reduce visual fatigue.
 
-- **Transactions**: Create, edit, delete, and access control
-- **Budgets**: Create, edit, delete, and access control
-- **Authentication**: Access to protected routes is restricted to logged-in users
+- **Typography**: 
+  - A modern sans-serif font is used for readability across all screen sizes.
+  - Font sizes are scaled responsively to maintain accessibility and clarity.
+
+- **Layout & Navigation**:
+  - A consistent navbar provides quick access to all main features (transactions, budgets, export, logout).
+  - Forms are centered and easy to use with clear labels, using Bootstrap for responsiveness.
+
+- **Mobile Responsiveness**:
+  - Bootstrap's grid system ensures a seamless experience on both desktop and mobile devices.
+  - Navigation collapses into a hamburger menu on smaller screens.
+
+- **User Feedback**:
+  - Toast messages and inline form validation provide real-time feedback during interactions.
+  - Pages include success/error indicators for user confidence.
+
+The overall goal was to create a calm, non-intimidating interface for users to manage their finances confidently.
+
+
+
+## 🗂 Data Models & Schema (ERD)
+
+This section outlines the key models used in the Personal Finance Tracker project and their relationships.
+
+### 👤 User
+> Django’s built-in User model
+
+- Each user can have multiple transactions
+- Each user can have multiple budgets
+
+---
+
+### 💰 Transaction
+
+| Field           | Type            | Notes                                           |
+|----------------|------------------|--------------------------------------------------|
+| `user`         | ForeignKey → User | Each transaction belongs to a user              |
+| `title`        | CharField         | Title of the transaction                        |
+| `amount`       | DecimalField      | Must be greater than 0                          |
+| `transaction_type` | ChoiceField   | 'Income' or 'Expense'                           |
+| `category`     | CharField         | Custom user-defined category                    |
+| `date`         | DateField         | Defaults to now                                 |
+| `notes`        | TextField         | Optional notes                                  |
+| `recurring`    | BooleanField      | True/False flag                                 |
+| `payment_method` | ChoiceField     | Cash, Card, Bank Transfer                       |
+
+---
+
+### 📊 Budget
+
+| Field           | Type            | Notes                                           |
+|----------------|------------------|--------------------------------------------------|
+| `user`         | ForeignKey → User | Each budget belongs to a user                   |
+| `category`     | CharField         | Category of the budget                          |
+| `amount`       | DecimalField      | Budget amount                                   |
+| `start_date`   | DateField         | Defaults to now                                 |
+| `end_date`     | DateField         | Optional                                        |
+| `notes`        | TextField         | Optional notes                                  |
+
+---
+
+### 🔗 Relationships
+
+```plaintext
++--------+         +-------------+         +--------+
+|  User  |<------->| Transaction |         | Budget |
++--------+         +-------------+         +--------+
+     |                 |  FK: user              | FK: user
+     |                 |                        |
+     +----------------+------------------------+
+```
+
+This schema enables per-user data control and secure financial record management. Each transaction and budget entry is scoped to the logged-in user, ensuring privacy and data ownership.
+
+
+## Testing & Validation
+
+### ✅ Overview
+
+Testing was carried out using a combination of **automated unit tests**, **manual exploratory testing**, and **code linting tools** to ensure the app functions as expected and meets security and data integrity standards.
+
+---
+
+### ✅ Automated Unit Tests
+
+Django's built-in testing framework was used to create a suite of unit tests located in `transactions/tests.py`.
+
+#### Key Coverage Areas:
+
+| Area             | Description                                                                            |
+|------------------|----------------------------------------------------------------------------------------|
+| Transactions     | Add, edit, delete, list transactions. Ensures users can only access their own records. |
+| Budgets          | Create, edit, delete budgets with permission enforcement.                              |
+| Authentication   | Access to views is restricted to authenticated users.                                  |
+| Permissions      | Non-owners receive 403 responses when trying to access another user's data.            |
 
 Run all tests using:
 
@@ -178,38 +251,77 @@ Run all tests using:
 python manage.py test
 ```
 
-These tests are essential to ensure that users can only modify their own data, and that the application behaves as expected.
+output:
+
+```
+Found 12 test(s).
+Creating test database for alias 'default'...
+System check identified no issues (0 silenced).
+.Permission denied: User otheruser tried to delete budget 3 owned by testuser
+Forbidden: /transactions/budgets/3/delete/
+..Permission denied: User otheruser tried to edit budget 5 owned by testuser
+Forbidden: /transactions/budgets/5/edit/
+...Permission denied: User otheruser tried to delete transaction 3 owned by testuser
+Forbidden: /transactions/transactions/3/delete/
+..Permission denied: User otheruser tried to edit transaction 5 owned by testuser
+Forbidden: /transactions/transactions/5/edit/
+..
+----------------------------------------------------------------------
+Ran 12 tests in 14.642s
+
+OK
+Destroying test database for alias 'default'...
+```
 
 ---
 
-### ✅ Code Linting
+### ✅ Manual Testing
 
-The codebase follows Python best practices and is linted using:
+Manual testing was conducted to supplement automated tests, focusing on user experience, form behavior, and deployment functionality.
 
-- **flake8** – For general style guide enforcement (PEP8)
-- **isort** – For automatic sorting of imports
-- **black** – For code formatting consistency
+| Feature                  | Test Case                                                                 | Result     |
+|--------------------------|---------------------------------------------------------------------------|------------|
+| Login/Logout             | Login with valid/invalid credentials; logout flow                         | ✅ Success |
+| Transactions CRUD        | Add/edit/delete transactions, including validation edge cases             | ✅ Success |
+| Budgets CRUD             | Add/edit/delete budget records                                             | ✅ Success |
+| PDF Export               | Generate PDF with/without data present                                     | ✅ Success |
+| Permissions              | Attempt to view/edit/delete another user’s data                           | ✅ Blocked |
+| Deployment               | Heroku live site renders correctly, no DEBUG leaks                        | ✅ Success |
+| Responsiveness           | UI behaves correctly across desktop and mobile                            | ✅ Success |
 
-To check the code style manually:
+---
+
+### ✅ Code Quality & Linting
+
+Tools used:
+- `flake8`: PEP8 compliance
+- `black`: Consistent code formatting
+- `isort`: Organize imports
+
+To check manually:
 
 ```bash
 flake8 --max-line-length=120 --exclude=venv
 ```
 
-Linting helps maintain a clean, readable, and professional codebase.
+> All code passed linting with no critical errors or warnings in the final version.
 
 ---
 
-### ✅ Environment Separation
+### ✅ Environment & Security
 
-Environment variables such as `SECRET_KEY` and `DEBUG` are loaded via a `.env` file and never hardcoded in the codebase. This prevents sensitive data from being exposed.
+- ✅ `SECRET_KEY` stored in `.env` and not exposed in source code.
+- ✅ `DEBUG=False` in production.
+- ✅ Sensitive config variables set via Heroku Config Vars.
+- ✅ `.env` and `__pycache__` excluded via `.gitignore`.
 
 ---
 
-### ✅ Git Best Practices
+### ✅ Summary
 
-- Pre-commit hooks (optional) were used during development to auto-check for formatting issues and common errors.
-- `.gitignore` prevents committing virtual environments, environment files, and other unnecessary artifacts.
+All key functionalities were tested through both automated and manual testing methods. The application passes all permission checks, form validation, and CRUD workflows with appropriate handling of edge cases.
+
+---
 
 ## Deployment
 
@@ -272,68 +384,6 @@ The project uses **Whitenoise** for serving static files in production. Make sur
 python manage.py collectstatic
 ```
 
-## Testing
-
-Thorough testing was conducted to ensure application reliability and security, particularly around user permissions and data ownership. The following test strategies and tools were used:
-
-### 1. Django Unit Tests
-
-The project includes a comprehensive suite of unit tests for key views and functionality.
-
-To run tests locally:
-
-```bash
-python manage.py test
-```
-
-#### Key Areas Tested:
-- **Transaction Tests:**
-  - Authenticated vs unauthenticated access to transaction views
-  - Owner vs non-owner access when editing and deleting transactions
-- **Budget Tests:**
-  - Authenticated creation of budgets
-  - Permission-based editing and deletion of budgets
-- **Access Control:**
-  - Non-owners attempting to access protected data return proper `403 Forbidden` responses
-  - Unauthorized users are redirected to login when required
-
-### 2. Code Style Checks
-
-To ensure code quality and readability, the following tools were used:
-
-- **flake8**: For enforcing PEP8 standards and flagging syntax issues
-- **black**: Auto-formatting code for consistency (locally run)
-- **isort**: Ensures consistent import order (optional)
-
-You can run `flake8` like this:
-
-```bash
-flake8 --max-line-length=120 --exclude=venv
-```
-
-No blocking lint errors were present in the final submitted version.
-
-### 3. Manual Testing
-
-Additional manual tests were performed, including:
-
-- Form submissions with invalid data
-- Login/logout functionality
-- Permissions testing via multiple user accounts
-- Application behaviour with and without authentication
-
-### 4. Heroku Production Testing
-
-The app was deployed to Heroku and tested to ensure:
-
-- Environment variables are respected
-- `DEBUG` is disabled in production
-- `SECRET_KEY` is kept out of source code
-- The production database is properly connected
-
-> ✅ All tests passed and the deployed version functions as expected.
-
-
 ### 📚 Credits / Acknowledgements
 
 This project was developed as part of a Django portfolio submission for educational purposes. The following resources and tools were instrumental in its development:
@@ -348,7 +398,7 @@ This project was developed as part of a Django portfolio submission for educatio
 If any external code or references were adapted in the project, they were modified appropriately and acknowledged where used.
 
 
-## 2. Possible Future Improvements
+## Possible Future Improvements
 
 While the current version of the Personal Finance Tracker meets its core objectives, there are several enhancements and new features that could be explored in future iterations:
 
@@ -376,14 +426,14 @@ While the current version of the Personal Finance Tracker meets its core objecti
 These improvements could significantly enhance user experience, accessibility, and functionality.
 
 
-## 3. License
+## License
 
 This project is intended for **educational purposes only** and does not carry a formal software license.  
 It was developed as part of a portfolio submission to demonstrate Django development proficiency.
 
 ---
 
-## 4. Contact / Author Info
+## Contact / Author Info
 
 **Author**: Nathan Sweeney  
 **GitHub**: [github.com/N3wee](https://github.com/N3wee)  
